@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Abandoned Carts — Kelsworth Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="adminSidebar"></aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Abandoned Carts</h1>
+        <p>Recover lost revenue by sending reminder emails.</p>
+      </div>
+    </div>
+
+    <div class="stat-row" id="statsRow" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+      <div class="stat-card"><div class="stat-label">Active Abandoned</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Reminded</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Potential Revenue</div><div class="stat-value">—</div></div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Email / Phone</th>
+          <th>Items</th>
+          <th>Cart Total</th>
+          <th>Last Updated</th>
+          <th>Reminder Sent</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="cartsBody">
+        <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+  mountAdminChrome("abandoned-carts");
+
+  let carts = [];
+
+  function rowHTML(c) {
+    const contact = c.phone
+      ? `${c.email}<br><span style="color:var(--ink-soft);font-size:12px">(${c.phone})</span>`
+      : c.email;
+    const pillClass = c.reminder_sent ? "delivered" : "cancelled";
+    const pillLabel = c.reminder_sent ? "Yes" : "No";
+    const btnDisabled = c.reminder_sent ? ' disabled style="opacity:.4;cursor:default"' : '';
+    return `
+      <tr>
+        <td>${contact}</td>
+        <td>${c.item_count}</td>
+        <td style="font-family:var(--font-mono)">${formatPKR(c.subtotal)}</td>
+        <td style="font-weight:400">${formatDate(c.last_updated)}</td>
+        <td><span class="status-pill ${pillClass}">${pillLabel}</span></td>
+        <td>
+          <div class="row-actions">
+            <button data-remind="${c.id}"${btnDisabled}>Send Reminder</button>
+          </div>
+        </td>
+      </tr>`;
+  }
+
+  function renderTable() {
+    const body = document.getElementById("cartsBody");
+    body.innerHTML = carts.length
+      ? carts.map(rowHTML).join("")
+      : `<tr class="empty-row"><td colspan="6">No abandoned carts right now.</td></tr>`;
+
+    body.querySelectorAll("[data-remind]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.remind;
+        btn.disabled = true;
+        btn.textContent = "Sending…";
+        try {
+          await adminFetch(`/api/admin/abandoned-carts/${id}/remind`, { method: "POST" });
+          const cart = carts.find((x) => String(x.id) === id);
+          if (cart) cart.reminder_sent = true;
+          renderTable();
+        } catch (err) {
+          alert(err.message);
+          btn.disabled = false;
+          btn.textContent = "Send Reminder";
+        }
+      });
+    });
+  }
+
+  function renderStats(stats) {
+    const cards = document.querySelectorAll("#statsRow .stat-card");
+    cards[0].querySelector(".stat-value").textContent = stats.active_abandoned;
+    cards[1].querySelector(".stat-value").textContent = stats.reminded;
+    cards[2].querySelector(".stat-value").textContent = formatPKR(stats.potential_revenue);
+  }
+
+  (async () => {
+    try {
+      const [stats, data] = await Promise.all([
+        adminFetch("/api/admin/abandoned-carts/stats"),
+        adminFetch("/api/admin/abandoned-carts"),
+      ]);
+      renderStats(stats);
+      carts = data;
+      renderTable();
+    } catch (err) {
+      document.getElementById("cartsBody").innerHTML = `<tr class="empty-row"><td colspan="6">${err.message}</td></tr>`;
+    }
+  })();
+</script>
+</body>
+</html>

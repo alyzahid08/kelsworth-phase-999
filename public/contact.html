@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contact Us — Kelsworth</title>
+<meta name="description" content="Questions about an order, sizing, or a product? Reach the Kelsworth team here." />
+<link rel="canonical" href="https://www.kelsworth.com/contact.html" />
+<meta property="og:site_name" content="Kelsworth" />
+<meta property="og:title" content="Contact Kelsworth" />
+<meta property="og:description" content="Questions about an order, sizing, or a product? Reach the Kelsworth team here." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="/images/og-banner.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Contact Kelsworth" />
+<meta name="twitter:description" content="Questions about an order, sizing, or a product? Reach the Kelsworth team here." />
+<meta name="twitter:image" content="/images/og-banner.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="site-header" id="site-header"></header>
+
+<div id="main-content" tabindex="-1" class="container">
+  <div class="breadcrumb"><a href="index.html">Home</a> / <span>Contact</span></div>
+
+  <div class="static-page" style="max-width:960px">
+    <h1>Contact Us</h1>
+    <p class="lede">Order questions, sizing help, or just feedback — we read every message ourselves, usually within one business day.</p>
+
+    <div class="contact-layout">
+      <div>
+        <form id="contactForm" style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;gap:14px">
+            <div class="field" style="flex:1"><label for="c_name">Name</label><input type="text" id="c_name" required /></div>
+            <div class="field" style="flex:1"><label for="c_email">Email</label><input type="email" id="c_email" required /></div>
+          </div>
+          <div class="field">
+            <label for="c_subject">Subject</label>
+            <select id="c_subject">
+              <option>General Inquiry</option>
+              <option>Order Issue</option>
+              <option>Sizing Help</option>
+              <option>Return / Exchange</option>
+              <option>Wholesale / Press</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="c_message">Message</label>
+            <textarea id="c_message" required style="min-height:150px"></textarea>
+          </div>
+          <p id="contactError" role="alert" style="display:none;color:var(--accent);font-size:13px"></p>
+          <p id="contactSuccess" role="status" style="display:none;color:#3f7a44;font-size:13px">Message sent — we'll get back to you soon.</p>
+          <button type="submit" class="btn" id="contactSubmitBtn" style="align-self:flex-start;padding:14px 32px">Send Message</button>
+        </form>
+      </div>
+
+      <div class="contact-info-card">
+        <h3>Email</h3>
+        <p><a href="mailto:hello@kelsworth.com">hello@kelsworth.com</a></p>
+        <h3>Order Support</h3>
+        <p>Have an order number ready and we can help faster. You can also <a href="track.html">track your order</a> directly.</p>
+        <h3>Response Time</h3>
+        <p>We typically reply within 1 business day, Monday–Saturday.</p>
+        <h3>Based In</h3>
+        <p>Karachi, Pakistan — shipping nationwide.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/site.js"></script>
+<script>
+  mountChrome("");
+
+  document.getElementById("contactForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById("contactError");
+    const successEl = document.getElementById("contactSuccess");
+    const btn = document.getElementById("contactSubmitBtn");
+    errorEl.style.display = "none";
+    successEl.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+    try {
+      await submitContactMessage({
+        name: document.getElementById("c_name").value,
+        email: document.getElementById("c_email").value,
+        subject: document.getElementById("c_subject").value,
+        message: document.getElementById("c_message").value,
+      });
+      document.getElementById("contactForm").reset();
+      successEl.style.display = "block";
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Send Message";
+    }
+  });
+</script>
+</body>
+</html>

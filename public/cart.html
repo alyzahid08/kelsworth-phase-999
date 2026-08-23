@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your Cart — Kelsworth</title>
+<meta name="description" content="Review your cart at Kelsworth before checkout." />
+<meta name="robots" content="noindex, follow" />
+<meta property="og:site_name" content="Kelsworth" />
+<meta property="og:title" content="Your Cart — Kelsworth" />
+<meta property="og:description" content="Review your cart at Kelsworth before checkout." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="/images/og-banner.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Your Cart — Kelsworth" />
+<meta name="twitter:description" content="Review your cart at Kelsworth before checkout." />
+<meta name="twitter:image" content="/images/og-banner.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="site-header" id="site-header"></header>
+
+<div id="main-content" tabindex="-1" class="container">
+  <div class="breadcrumb"><a href="index.html">Home</a> / <span>Cart</span></div>
+  <div class="collection-head"><h1>Your Cart</h1></div>
+
+  <div id="cartContent">
+    <div class="skeleton-line skeleton-block" style="height:60px;margin-bottom:16px"></div>
+    <div class="skeleton-line skeleton-block" style="height:100px;margin-bottom:12px"></div>
+    <div class="skeleton-line skeleton-block" style="height:100px"></div>
+  </div>
+</div>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/site.js"></script>
+<script>
+  mountChrome("cart");
+
+  const SHIP_THRESHOLD = 5000;
+  const SHIP_FLAT = 250;
+  const TAX_RATE = 0; // prices are tax-inclusive today — see routes/orders.js
+  let promoState = { code: null, discountAmount: 0, error: null };
+  let justChangedIndex = null;
+
+  function shippingProgressHTML(subtotal) {
+    const remaining = Math.max(0, SHIP_THRESHOLD - subtotal);
+    const pct = Math.min(100, Math.round((subtotal / SHIP_THRESHOLD) * 100));
+    return `
+      <div class="shipping-progress">
+        <p>${remaining === 0
+          ? `<strong>You've unlocked free shipping 🎉</strong>`
+          : `Add <strong>${formatPKR(remaining)}</strong> more for free shipping`}</p>
+        <div class="shipping-progress-track"><div class="shipping-progress-fill${remaining === 0 ? " reached" : ""}" style="width:${pct}%"></div></div>
+      </div>`;
+  }
+
+  function productCardHTML(p) {
+    const onSale = p.salePrice != null;
+    return `
+    <a class="product-card" href="product.html?id=${p.id}">
+      <div class="thumb">
+        ${p.badge ? `<span class="badge ${onSale ? "sale" : ""}">${p.badge}</span>` : ""}
+        <img src="${p.image}" alt="${p.name}" loading="lazy" decoding="async" />
+      </div>
+      <div class="card-body">
+        <span class="cat">${p.category}</span>
+        <h3>${p.name}</h3>
+        ${ratingSnippetHTML(p)}
+        <div class="price-row">
+          ${onSale
+            ? `<span class="price was">${formatPKR(p.price)}</span><span class="price now">${formatPKR(p.salePrice)}</span>`
+            : `<span class="price">${formatPKR(p.price)}</span>`}
+        </div>
+      </div>
+    </a>`;
+  }
+
+  async function renderRecommendations(cartLines) {
+    const mount = document.getElementById("cartRecs");
+    if (!mount) return;
+    const all = await fetchProducts();
+    const cartIds = new Set(cartLines.map((l) => l.product.id));
+    const cartCategories = new Set(cartLines.map((l) => l.product.category));
+    const pool = all.filter((p) => !cartIds.has(p.id));
+    // Prefer products in categories already in the cart, then fill with anything else.
+    const prioritized = [
+      ...pool.filter((p) => cartCategories.has(p.category)),
+      ...pool.filter((p) => !cartCategories.has(p.category)),
+    ].slice(0, 4);
+    if (!prioritized.length) { mount.style.display = "none"; return; }
+    mount.innerHTML = `<h3>You Might Also Like</h3><div class="product-grid">${prioritized.map(productCardHTML).join("")}</div>`;
+  }
+
+  async function renderSavedForLater() {
+    const mount = document.getElementById("savedLaterSection");
+    const saved = await savedForLaterWithProducts();
+    if (!saved.length) { mount.innerHTML = ""; return; }
+    mount.innerHTML = `
+      <h3>Saved for Later (${saved.length})</h3>
+      ${saved
+        .map(
+          (l) => `
+        <div class="saved-item">
+          <img src="${l.product.image}" alt="${l.product.name}" />
+          <div>
+            <div class="ci-name">${l.product.name}</div>
+            <div class="ci-meta">Size ${l.size} · Qty ${l.qty} · ${formatPKR(l.unit)}</div>
+          </div>
+          <div class="saved-item-actions">
+            <button type="button" data-move-to-cart="${l.index}">Move to Cart</button>
+            <button type="button" data-remove-saved="${l.index}">Remove</button>
+          </div>
+        </div>`
+        )
+        .join("")}`;
+    mount.querySelectorAll("[data-move-to-cart]").forEach((btn) => {
+      btn.addEventListener("click", () => { moveSavedLineToCart(Number(btn.dataset.moveToCart)); render(); });
+    });
+    mount.querySelectorAll("[data-remove-saved]").forEach((btn) => {
+      btn.addEventListener("click", () => { removeSavedLine(Number(btn.dataset.removeSaved)); render(); });
+    });
+  }
+
+  async function render() {
+    const lines = await cartLinesWithProducts();
+    const container = document.getElementById("cartContent");
+
+    if (!lines.length) {
+      const saved = getSavedForLater();
+      container.innerHTML = `
+        <div class="empty-cart">
+          <h2>Your cart is empty</h2>
+          <p>Denim doesn't add itself. Let's fix that.</p>
+          <a href="collection.html" class="btn">Shop Men's Denim</a>
+        </div>
+        <div id="savedLaterSection" class="saved-later-section"></div>`;
+      if (saved.length) renderSavedForLater();
+      return;
+    }
+
+    const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);
+    const shipping = subtotal >= SHIP_THRESHOLD || subtotal === 0 ? 0 : SHIP_FLAT;
+    const tax = Math.round(subtotal * TAX_RATE);
+
+    // Re-check any previously applied promo code against the current subtotal
+    // (quantities may have changed since it was applied).
+    const savedCode = getAppliedPromoCode();
+    if (savedCode && !promoState.code && !promoState.error) {
+      try {
+        const result = await validatePromoCode(savedCode, subtotal);
+        promoState = { code: result.code, discountAmount: result.discountAmount, error: null };
+      } catch (err) {
+        clearPromoCode();
+        promoState = { code: null, discountAmount: 0, error: null };
+      }
+    }
+
+    const total = subtotal + shipping + tax - promoState.discountAmount;
+
+    container.innerHTML = `
+      <div class="cart-layout">
+        <div>
+          ${shippingProgressHTML(subtotal)}
+          ${lines
+            .map(
+              (l) => `
+            <div class="cart-item">
+              <img src="${l.product.image}" alt="${l.product.name}" />
+              <div>
+                <div class="ci-name">${l.product.name}</div>
+                <div class="ci-meta">Size ${l.size}</div>
+                <button class="ci-remove" data-remove="${l.index}">Remove</button>
+                <button class="ci-save-later" data-save-later="${l.index}">Save for later</button>
+              </div>
+              <div class="ci-right">
+                <div class="qty-stepper">
+                  <button type="button" data-qty-minus="${l.index}" aria-label="Decrease quantity">−</button>
+                  <span id="qty-${l.index}" class="${l.index === justChangedIndex ? "pulse" : ""}">${l.qty}</span>
+                  <button type="button" data-qty-plus="${l.index}" aria-label="Increase quantity">+</button>
+                </div>
+                <div class="ci-price">${formatPKR(l.lineTotal)}</div>
+              </div>
+            </div>`
+            )
+            .join("")}
+          <div id="savedLaterSection" class="saved-later-section"></div>
+          <div class="cart-recs" id="cartRecs"></div>
+        </div>
+
+        <div class="summary-card">
+          <h3>Order Summary</h3>
+          <div class="summary-row"><span>Subtotal</span><span>${formatPKR(subtotal)}</span></div>
+          <div class="summary-row"><span>Estimated Shipping</span><span>${shipping === 0 ? "Free" : formatPKR(shipping)}</span></div>
+          <div class="summary-row"><span>Estimated Tax</span><span>${tax === 0 ? "Included" : formatPKR(tax)}</span></div>
+          ${promoState.code
+            ? `<div class="summary-row"><span>Promo (${promoState.code})</span><span>−${formatPKR(promoState.discountAmount)} <button type="button" id="removePromo" style="background:none;border:none;text-decoration:underline;color:var(--ink-soft);font-family:var(--font-mono);font-size:10px;cursor:pointer;margin-left:6px">remove</button></span></div>`
+            : ""}
+          <div class="promo-row">
+            <input type="text" id="promoInput" placeholder="Promo code" ${promoState.code ? "disabled" : ""} value="${promoState.code || ""}" />
+            <button class="btn outline" id="applyPromo" style="padding:0 16px" ${promoState.code ? "disabled" : ""}>Apply</button>
+          </div>
+          ${promoState.error ? `<p style="font-size:12px;color:var(--accent);margin:-8px 0 8px">${promoState.error}</p>` : ""}
+          <div class="summary-row total"><span>Total</span><span>${formatPKR(total)}</span></div>
+          <a href="checkout.html" class="btn full" style="margin-top:16px">Proceed to Checkout</a>
+          <p style="font-size:12px;color:var(--ink-soft);margin-top:14px;text-align:center">Free shipping on orders over ${formatPKR(SHIP_THRESHOLD)} · Estimated delivery 3–5 working days</p>
+        </div>
+      </div>`;
+    justChangedIndex = null;
+
+    container.querySelectorAll("[data-remove]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        removeCartLine(Number(btn.dataset.remove));
+        render();
+      });
+    });
+    container.querySelectorAll("[data-save-later]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        moveCartLineToSaved(Number(btn.dataset.saveLater));
+        render();
+      });
+    });
+    container.querySelectorAll("[data-qty-plus]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const i = Number(btn.dataset.qtyPlus);
+        const line = getCart()[i];
+        if (line) updateCartLine(i, line.qty + 1);
+        justChangedIndex = i;
+        render();
+      });
+    });
+    container.querySelectorAll("[data-qty-minus]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const i = Number(btn.dataset.qtyMinus);
+        const line = getCart()[i];
+        if (line) updateCartLine(i, line.qty - 1);
+        justChangedIndex = i;
+        render();
+      });
+    });
+
+    const applyBtn = document.getElementById("applyPromo");
+    if (applyBtn) {
+      applyBtn.addEventListener("click", async () => {
+        const code = document.getElementById("promoInput").value.trim();
+        if (!code) return;
+        applyBtn.disabled = true;
+        applyBtn.textContent = "Checking…";
+        try {
+          const result = await validatePromoCode(code, subtotal);
+          promoState = { code: result.code, discountAmount: result.discountAmount, error: null };
+          setAppliedPromoCode(result.code);
+        } catch (err) {
+          promoState = { code: null, discountAmount: 0, error: err.message };
+        }
+        render();
+      });
+    }
+    const removeBtn = document.getElementById("removePromo");
+    if (removeBtn) {
+      removeBtn.addEventListener("click", () => {
+        clearPromoCode();
+        promoState = { code: null, discountAmount: 0, error: null };
+        render();
+      });
+    }
+
+    renderSavedForLater();
+    renderRecommendations(lines);
+  }
+
+  render();
+</script>
+</body>
+</html>

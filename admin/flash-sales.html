@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Flash Sales — Kelsworth Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="adminSidebar"></aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Flash Sales</h1>
+        <p>Time-limited deals on select products — great for weekend drops and clearance events.</p>
+      </div>
+      <button class="btn" id="newFlashBtn">+ New Flash Sale</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Discount</th>
+          <th>Products</th>
+          <th>Starts</th>
+          <th>Ends</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="flashBody">
+        <tr class="empty-row"><td colspan="7">Loading…</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<div class="modal-overlay" id="flashModal">
+  <div class="modal-box" style="max-width:540px">
+    <button class="modal-close" id="closeModal">✕</button>
+    <h3 id="modalTitle">New Flash Sale</h3>
+    <form id="flashForm">
+      <input type="hidden" id="f_id" />
+      <div class="form-grid">
+        <div class="field full">
+          <label for="f_name">Sale Name</label>
+          <input type="text" id="f_name" placeholder="e.g. Weekend Denim Drop" required />
+        </div>
+        <div class="field full">
+          <label for="f_description">Description (optional)</label>
+          <input type="text" id="f_description" placeholder="Short tagline shown on the storefront" />
+        </div>
+        <div class="field full">
+          <label for="f_bannerImage">Banner Image URL (optional)</label>
+          <input type="text" id="f_bannerImage" placeholder="/images/flash-sale-banner.jpg" />
+        </div>
+        <div class="field">
+          <label for="f_discountType">Discount Type</label>
+          <select id="f_discountType" required>
+            <option value="percent">Percentage (%)</option>
+            <option value="fixed">Fixed Amount (Rs.)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f_discountValue">Discount Value</label>
+          <input type="number" id="f_discountValue" min="1" required />
+        </div>
+        <div class="field">
+          <label for="f_startsAt">Starts</label>
+          <input type="datetime-local" id="f_startsAt" required />
+        </div>
+        <div class="field">
+          <label for="f_endsAt">Ends</label>
+          <input type="datetime-local" id="f_endsAt" required />
+        </div>
+        <div class="field full">
+          <label>Products</label>
+          <input type="text" id="f_productSearch" placeholder="Search products by name or slug…" style="margin-bottom:8px" />
+          <div id="productPicker" style="max-height:180px;overflow-y:auto;border:1px solid var(--line);padding:6px 8px;background:var(--bg)"></div>
+          <p style="font-size:11.5px;color:var(--ink-soft);margin-top:6px">Tick the products to include. Use the search box to filter.</p>
+        </div>
+      </div>
+      <p id="formError" style="display:none;color:var(--accent);font-size:13px;margin-top:12px"></p>
+      <div class="modal-actions">
+        <button type="submit" class="btn" id="saveBtn">Save Flash Sale</button>
+        <button type="button" class="btn outline" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+  mountAdminChrome("flash-sales");
+
+  let currentFlashSales = [];
+  let allProducts = [];
+  let selectedProductIds = new Set();
+
+  /* ---- helpers ---- */
+
+  function toLocalDatetime(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function saleStatus(s) {
+    const now = new Date();
+    if (!s.active) return { label: "Disabled", cls: "cancelled" };
+    const start = new Date(s.starts_at);
+    const end = new Date(s.ends_at);
+    if (now < start) return { label: "Scheduled", cls: "pending" };
+    if (now >= end) return { label: "Expired", cls: "cancelled" };
+    return { label: "Live", cls: "delivered" };
+  }
+
+  function discountLabel(s) {
+    return s.discount_type === "percent"
+      ? `${s.discount_value}% OFF`
+      : `${formatPKR(s.discount_value)} OFF`;
+  }
+
+  function rowHTML(s) {
+    const st = saleStatus(s);
+    const prods = (s.products || []).filter(Boolean);
+    return `
+      <tr>
+        <td>${s.name}<br><span style="color:var(--ink-soft);font-size:11.5px">${s.description || ""}</span></td>
+        <td>${discountLabel(s)}</td>
+        <td>${prods.length ? prods.map((p) => `<span style="display:block;font-size:12px;line-height:1.4">${p.name}</span>`).join("") : "<span style=\"color:var(--ink-soft)\">None</span>"}</td>
+        <td style="white-space:nowrap">${formatDate(s.starts_at)}</td>
+        <td style="white-space:nowrap">${formatDate(s.ends_at)}</td>
+        <td><span class="status-pill ${st.cls}">${st.label}</span></td>
+        <td>
+          <div class="row-actions">
+            <button data-edit="${s.id}">Edit</button>
+            <button data-toggle="${s.id}">${s.active ? "Disable" : "Enable"}</button>
+            <button data-delete="${s.id}" class="danger">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+  }
+
+  /* ---- render table ---- */
+
+  function renderTable() {
+    const body = document.getElementById("flashBody");
+    body.innerHTML = currentFlashSales.length
+      ? currentFlashSales.map(rowHTML).join("")
+      : `<tr class="empty-row"><td colspan="7">No flash sales yet.</td></tr>`;
+
+    body.querySelectorAll("[data-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const s = currentFlashSales.find((x) => x.id === Number(btn.dataset.edit));
+        if (s) openModal(s);
+      });
+    });
+    body.querySelectorAll("[data-toggle]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const s = currentFlashSales.find((x) => x.id === Number(btn.dataset.toggle));
+        try {
+          const updated = await adminFetch(`/api/admin/flash-sales/${s.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ active: !s.active }),
+          });
+          currentFlashSales = currentFlashSales.map((x) => (x.id === updated.id ? updated : x));
+          renderTable();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+    body.querySelectorAll("[data-delete]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const s = currentFlashSales.find((x) => x.id === Number(btn.dataset.delete));
+        if (!confirm(`Delete flash sale "${s.name}"? This can't be undone.`)) return;
+        try {
+          await adminFetch(`/api/admin/flash-sales/${s.id}`, { method: "DELETE" });
+          currentFlashSales = currentFlashSales.filter((x) => x.id !== s.id);
+          renderTable();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+  }
+
+  /* ---- product picker ---- */
+
+  function renderProductPicker(filter) {
+    const container = document.getElementById("productPicker");
+    const q = (filter || "").trim().toLowerCase();
+    const list = q
+      ? allProducts.filter((p) => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q))
+      : allProducts;
+
+    if (!list.length) {
+      container.innerHTML = `<p style="font-size:12px;color:var(--ink-soft);padding:4px 0">No products found.</p>`;
+      return;
+    }
+
+    container.innerHTML = list
+      .map(
+        (p) => `
+        <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;border-bottom:1px solid var(--line)">
+          <input type="checkbox" value="${p.id}" ${selectedProductIds.has(p.id) ? "checked" : ""}
+            style="width:15px;height:15px;flex-shrink:0" />
+          <img src="${p.image}" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:4px;flex-shrink:0" />
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</span>
+          <span style="color:var(--ink-soft);font-size:11px;font-family:var(--font-mono);flex-shrink:0">${formatPKR(p.price)}</span>
+        </label>`
+      )
+      .join("");
+
+    container.querySelectorAll("input[type=checkbox]").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const id = Number(cb.value);
+        if (cb.checked) selectedProductIds.add(id);
+        else selectedProductIds.delete(id);
+      });
+    });
+  }
+
+  document.getElementById("f_productSearch").addEventListener("input", (e) => {
+    renderProductPicker(e.target.value);
+  });
+
+  /* ---- modal ---- */
+
+  const modal = document.getElementById("flashModal");
+  const form = document.getElementById("flashForm");
+
+  function openModal(sale) {
+    document.getElementById("formError").style.display = "none";
+    form.reset();
+
+    if (sale) {
+      document.getElementById("modalTitle").textContent = "Edit Flash Sale";
+      document.getElementById("f_id").value = sale.id;
+      document.getElementById("f_name").value = sale.name;
+      document.getElementById("f_description").value = sale.description || "";
+      document.getElementById("f_bannerImage").value = sale.banner_image || "";
+      document.getElementById("f_discountType").value = sale.discount_type;
+      document.getElementById("f_discountValue").value = sale.discount_value;
+      document.getElementById("f_startsAt").value = toLocalDatetime(sale.starts_at);
+      document.getElementById("f_endsAt").value = toLocalDatetime(sale.ends_at);
+      selectedProductIds = new Set(sale.product_ids || []);
+    } else {
+      document.getElementById("modalTitle").textContent = "New Flash Sale";
+      document.getElementById("f_id").value = "";
+      selectedProductIds = new Set();
+    }
+
+    renderProductPicker("");
+    modal.classList.add("open");
+  }
+
+  function closeModal() {
+    modal.classList.remove("open");
+  }
+
+  document.getElementById("newFlashBtn").addEventListener("click", () => openModal(null));
+  document.getElementById("closeModal").addEventListener("click", closeModal);
+  document.getElementById("cancelBtn").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById("formError");
+    errorEl.style.display = "none";
+    const id = document.getElementById("f_id").value;
+
+    if (!selectedProductIds.size) {
+      errorEl.textContent = "Select at least one product.";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    const startsAt = document.getElementById("f_startsAt").value;
+    const endsAt = document.getElementById("f_endsAt").value;
+    if (new Date(endsAt) <= new Date(startsAt)) {
+      errorEl.textContent = "End time must be after start time.";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    const body = {
+      name: document.getElementById("f_name").value.trim(),
+      description: document.getElementById("f_description").value.trim() || null,
+      bannerImage: document.getElementById("f_bannerImage").value.trim() || null,
+      discountType: document.getElementById("f_discountType").value,
+      discountValue: Number(document.getElementById("f_discountValue").value),
+      startsAt,
+      endsAt,
+      productIds: Array.from(selectedProductIds),
+    };
+
+    try {
+      if (id) {
+        const updated = await adminFetch(`/api/admin/flash-sales/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        });
+        currentFlashSales = currentFlashSales.map((x) => (x.id === updated.id ? updated : x));
+      } else {
+        const created = await adminFetch("/api/admin/flash-sales", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        currentFlashSales.unshift(created);
+      }
+      closeModal();
+      renderTable();
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = "block";
+    }
+  });
+
+  /* ---- init ---- */
+
+  (async () => {
+    try {
+      const [sales, products] = await Promise.all([
+        adminFetch("/api/admin/flash-sales"),
+        adminFetch("/api/admin/products"),
+      ]);
+      currentFlashSales = sales;
+      allProducts = products;
+      renderTable();
+    } catch (err) {
+      document.getElementById("flashBody").innerHTML = `<tr class="empty-row"><td colspan="7">${err.message}</td></tr>`;
+    }
+  })();
+</script>
+</body>
+</html>

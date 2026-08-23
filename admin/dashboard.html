@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Dashboard — Kelsworth Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="adminSidebar"></aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Dashboard</h1>
+        <p>How the store is doing, at a glance.</p>
+      </div>
+    </div>
+
+    <div id="dashboardContent">
+      <p style="font-family:var(--font-mono);font-size:12px;color:var(--ink-soft)">Loading…</p>
+    </div>
+  </main>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+  mountAdminChrome("dashboard");
+
+  const STATUS_COLORS = {
+    pending: "var(--denim-soft)",
+    processing: "var(--denim)",
+    shipped: "var(--ink)",
+    delivered: "#2f6b3a",
+    cancelled: "var(--accent)",
+  };
+
+  function statCardsHTML(d) {
+    const cards = [
+      { label: "Total Revenue (net of cancelled)", value: formatPKR(d.total_revenue) },
+      { label: "Revenue This Month", value: formatPKR(d.revenue_this_month) },
+      { label: "Total Orders", value: d.total_orders },
+      { label: "Average Order Value", value: formatPKR(d.avg_order_value) },
+      { label: "Total Customers", value: d.total_customers },
+      { label: "New Customers This Month", value: d.new_this_month },
+    ];
+    return cards.map((c) => `<div class="stat-card"><div class="stat-label">${c.label}</div><div class="stat-value" style="font-size:26px">${c.value}</div></div>`).join("");
+  }
+
+  function statusBreakdownHTML(d) {
+    const statuses = [
+      ["pending", "Pending", d.pending_orders],
+      ["processing", "Processing", d.processing_orders],
+      ["shipped", "Shipped", d.shipped_orders],
+      ["delivered", "Delivered", d.delivered_orders],
+      ["cancelled", "Cancelled", d.cancelled_orders],
+    ];
+    const max = Math.max(1, ...statuses.map((s) => s[2]));
+    return `
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${statuses
+          .map(
+            ([key, label, count]) => `
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:80px;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--ink-soft)">${label}</span>
+            <div style="flex:1;background:var(--paper);height:14px;position:relative">
+              <div style="width:${(count / max) * 100}%;background:${STATUS_COLORS[key]};height:100%"></div>
+            </div>
+            <span style="width:30px;text-align:right;font-family:var(--font-mono);font-size:12px">${count}</span>
+          </div>`
+          )
+          .join("")}
+      </div>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin-top:14px">${d.account_orders} order${d.account_orders === 1 ? "" : "s"} from logged-in accounts · ${d.guest_orders} guest order${d.guest_orders === 1 ? "" : "s"}</p>
+    `;
+  }
+
+  // A plain SVG line+bar chart — no charting library needed for 30 data points.
+  function revenueChartHTML(daily) {
+    const width = 720, height = 220, padding = 28;
+    const max = Math.max(1, ...daily.map((d) => d.revenue));
+    const stepX = (width - padding * 2) / (daily.length - 1 || 1);
+
+    const points = daily.map((d, i) => {
+      const x = padding + i * stepX;
+      const y = height - padding - (d.revenue / max) * (height - padding * 2);
+      return `${x},${y}`;
+    });
+
+    const barWidth = Math.max(2, stepX - 4);
+    const bars = daily
+      .map((d, i) => {
+        const x = padding + i * stepX - barWidth / 2;
+        const barHeight = (d.revenue / max) * (height - padding * 2);
+        const y = height - padding - barHeight;
+        return `<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" fill="var(--line)" />`;
+      })
+      .join("");
+
+    const firstLabel = daily[0] ? daily[0].day.slice(5) : "";
+    const lastLabel = daily[daily.length - 1] ? daily[daily.length - 1].day.slice(5) : "";
+
+    return `
+      <svg viewBox="0 0 ${width} ${height}" style="width:100%;height:auto;overflow:visible">
+        ${bars}
+        <polyline points="${points.join(" ")}" fill="none" stroke="var(--ink)" stroke-width="2" />
+        <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="var(--line)" stroke-dasharray="4 4" />
+        <text x="${padding}" y="${height - 6}" font-family="monospace" font-size="10" fill="#4d4d49">${firstLabel}</text>
+        <text x="${width - padding}" y="${height - 6}" font-family="monospace" font-size="10" fill="#4d4d49" text-anchor="end">${lastLabel}</text>
+        <text x="${padding}" y="16" font-family="monospace" font-size="10" fill="#4d4d49">${formatPKR(max)}</text>
+      </svg>`;
+  }
+
+  function bestSellersHTML(items) {
+    if (!items.length) return `<p style="font-size:13px;color:var(--ink-soft)">No sales yet.</p>`;
+    return `
+      <table>
+        <thead><tr><th>Product</th><th>Units Sold</th><th>Revenue</th></tr></thead>
+        <tbody>
+          ${items.map((p) => `<tr><td>${p.product_name}</td><td>${p.units_sold}</td><td>${formatPKR(p.revenue)}</td></tr>`).join("")}
+        </tbody>
+      </table>`;
+  }
+
+  function topCustomersHTML(items) {
+    if (!items.length) return `<p style="font-size:13px;color:var(--ink-soft)">No account orders yet.</p>`;
+    return `
+      <table>
+        <thead><tr><th>Customer</th><th>Orders</th><th>Total Spent</th></tr></thead>
+        <tbody>
+          ${items
+            .map(
+              (c) => `<tr><td>${c.first_name} ${c.last_name}<br><span style="color:var(--ink-soft);font-size:11.5px">${c.email}</span></td><td>${c.order_count}</td><td>${formatPKR(c.total_spent)}</td></tr>`
+            )
+            .join("")}
+        </tbody>
+      </table>`;
+  }
+
+  function lowStockHTML(items) {
+    if (!items.length) return `<p style="font-size:13px;color:var(--ink-soft)">Nothing low on stock right now.</p>`;
+    return `
+      <table>
+        <thead><tr><th>Product</th><th>Low Sizes</th></tr></thead>
+        <tbody>
+          ${items
+            .map(
+              (p) => `<tr>
+                <td><a href="products.html" style="text-decoration:underline">${p.name}</a></td>
+                <td>${p.lowSizes.map((s) => `${s.size} (${s.stock === 0 ? "out" : s.stock})`).join(", ")}</td>
+              </tr>`
+            )
+            .join("")}
+        </tbody>
+      </table>`;
+  }
+
+  (async () => {
+    try {
+      const d = await adminFetch("/api/admin/analytics");
+      document.getElementById("dashboardContent").innerHTML = `
+        <div class="stat-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+          ${statCardsHTML(d)}
+        </div>
+
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px">
+          <div class="stat-card">
+            <div class="stat-label" style="margin-bottom:14px">Revenue — Last 30 Days</div>
+            ${revenueChartHTML(d.dailyRevenue)}
+          </div>
+          <div class="stat-card">
+            <div class="stat-label" style="margin-bottom:14px">Order Status Breakdown</div>
+            ${statusBreakdownHTML(d)}
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <div class="stat-label" style="margin-bottom:10px">Best-Selling Products</div>
+            ${bestSellersHTML(d.bestSellers)}
+          </div>
+          <div>
+            <div class="stat-label" style="margin-bottom:10px">Top Customers</div>
+            ${topCustomersHTML(d.topCustomers)}
+          </div>
+        </div>
+
+        <div style="margin-top:24px">
+          <div class="stat-label" style="margin-bottom:10px">Low Stock Alerts</div>
+          ${lowStockHTML(d.lowStockProducts)}
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById("dashboardContent").innerHTML = `<p style="color:var(--accent);font-size:13px">${err.message}</p>`;
+    }
+  })();
+</script>
+</body>
+</html>

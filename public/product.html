@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title id="pageTitleTag">Product — Kelsworth</title>
+<meta name="description" id="metaDescription" content="Shop men's denim at Kelsworth." />
+<meta property="og:site_name" content="Kelsworth" />
+<link rel="canonical" id="canonicalLink" href="https://www.kelsworth.com/product.html" />
+<meta property="og:title" id="ogTitle" content="Kelsworth" />
+<meta property="og:description" id="ogDescription" content="Shop men's denim at Kelsworth." />
+<meta property="og:type" content="product" />
+<meta property="og:image" content="/images/og-banner.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" id="twitterTitle" content="Kelsworth" />
+<meta name="twitter:description" id="twitterDescription" content="Shop men's denim at Kelsworth." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="site-header" id="site-header"></header>
+
+<div id="main-content" tabindex="-1" class="container">
+  <div class="breadcrumb">
+    <a href="index.html">Home</a> / <a href="collection.html">Men's Denim</a> / <span id="crumbName">…</span>
+  </div>
+
+  <div class="product-detail" id="productDetail">
+    <div class="skeleton-thumb skeleton-block" style="aspect-ratio:4/5"></div>
+    <div>
+      <div class="skeleton-line skeleton-block" style="width:30%;height:11px"></div>
+      <div class="skeleton-line skeleton-block" style="width:70%;height:26px;margin-top:14px"></div>
+      <div class="skeleton-line skeleton-block" style="width:20%;height:18px;margin-top:10px"></div>
+      <div class="skeleton-line skeleton-block" style="width:90%;height:44px;margin-top:24px"></div>
+      <div class="skeleton-line skeleton-block" style="width:100%;height:48px;margin-top:20px"></div>
+    </div>
+  </div>
+
+  <div class="cross-sell" id="completeTheLookSection" style="display:none">
+    <div class="section-head" style="padding:0 0 4px"><h2>Complete the Look</h2><hr class="stitch-rule"></div>
+    <p style="font-size:12.5px;color:var(--ink-soft)">Pair it with pieces our stylists chose to go with this one.</p>
+    <div class="ctl-grid" id="ctlGrid"></div>
+    <div class="fbt-total-bar" style="margin-top:18px">
+      <span class="fbt-total-price" id="ctlTotal"></span>
+      <button class="btn" id="ctlAddBtn">Add Selected to Bag</button>
+    </div>
+  </div>
+
+  <div class="cross-sell" id="fbtSection" style="display:none">
+    <div class="section-head" style="padding:0 0 4px"><h2>Frequently Bought Together</h2><hr class="stitch-rule"></div>
+    <div class="fbt-row" id="fbtRow"></div>
+    <div class="fbt-total-bar">
+      <span class="fbt-total-price" id="fbtTotal"></span>
+      <button class="btn" id="fbtAddBtn">Add Selected to Cart</button>
+    </div>
+  </div>
+
+  <div class="related" id="relatedSection">
+    <div class="section-head" style="padding:0 0 24px">
+      <h2>You May Also Like</h2>
+      <hr class="stitch-rule">
+    </div>
+    <div class="product-grid" id="relatedGrid"></div>
+  </div>
+
+  <div class="reviews-section" id="reviews">
+    <div class="section-head" style="padding:0 0 4px"><h2>Reviews</h2><hr class="stitch-rule"></div>
+
+    <div class="reviews-summary" id="reviewsSummary"></div>
+
+    <div id="writeReviewMount"></div>
+
+    <div class="reviews-toolbar">
+      <div class="rating-filter-chips" id="ratingChips"></div>
+      <select class="sort-select" id="reviewSort">
+        <option value="recent">Most Recent</option>
+        <option value="helpful">Most Helpful</option>
+        <option value="rating_high">Highest Rated</option>
+        <option value="rating_low">Lowest Rated</option>
+      </select>
+    </div>
+
+    <div id="reviewsList"></div>
+  </div>
+</div>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<div class="sticky-atc" id="stickyAtc">
+  <img id="stickyAtcImg" alt="" />
+  <div class="sa-info">
+    <div class="sa-name" id="stickyAtcName"></div>
+    <div class="sa-price" id="stickyAtcPrice"></div>
+  </div>
+  <button class="btn" id="stickyAtcBtn" type="button">Add to Cart</button>
+</div>
+
+<div class="lightbox-overlay" id="lightbox">
+  <div class="lightbox-stage" id="lightboxStage">
+    <button class="lightbox-close" id="lightboxClose">✕</button>
+    <button class="gallery-nav-arrow prev" id="lbPrev">‹</button>
+    <button class="gallery-nav-arrow next" id="lbNext">›</button>
+    <div id="lightboxMedia"></div>
+    <span class="lightbox-count" id="lightboxCount"></span>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/site.js"></script>
+<script>
+  mountChrome("collection");
+
+  const params = new URLSearchParams(location.search);
+  let productIdParam = params.get("id");
+
+  let product = null;
+  let variantsData = { colorVariants: [], completeTheLook: [], frequentlyBoughtWith: [], related: [] };
+  let selectedSize = null;
+  let selectedWaist = null;
+  let selectedLength = null;
+  let qty = 1;
+  let galleryItems = []; // [{type:'image'|'video', src, thumb}]
+  let activeGalleryIndex = 0;
+
+  function priceBlockHTML(p) {
+    const onSale = p.salePrice != null;
+    return onSale
+      ? `<span class="was">${formatPKR(p.price)}</span><span class="now">${formatPKR(p.salePrice)}</span>`
+      : `<span>${formatPKR(p.price)}</span>`;
+  }
+
+  function starsHTML(rating) {
+    const full = Math.round(rating);
+    return `<span class="stars">${"★".repeat(full)}${"☆".repeat(5 - full)}</span>`;
+  }
+
+  /* ---------------------------- Gallery ---------------------------- */
+
+  function buildGalleryItems(p) {
+    const items = (p.images && p.images.length ? p.images : [p.image]).map((src) => ({ type: "image", src, thumb: src }));
+    if (p.videoUrl) items.push({ type: "video", src: p.videoUrl, thumb: items[0] ? items[0].thumb : p.image });
+    return items;
+  }
+
+  function renderGallery() {
+    const mainWrap = document.getElementById("galleryMain");
+    const item = galleryItems[activeGalleryIndex];
+    if (item.type === "video") {
+      mainWrap.innerHTML = `<video src="${item.src}" controls playsinline style="width:100%;height:100%;object-fit:cover"></video>`;
+    } else {
+      mainWrap.innerHTML = `<img src="${item.src}" alt="${product.name}" id="mainImg" />`;
+      attachZoom(document.getElementById("mainImg"), mainWrap);
+    }
+    document.querySelectorAll(".gallery-thumbs button").forEach((btn, i) => {
+      btn.classList.toggle("active", i === activeGalleryIndex);
+    });
+  }
+
+  function attachZoom(imgEl, wrapEl) {
+    const canHover = window.matchMedia("(hover: hover)").matches;
+    if (canHover) {
+      wrapEl.addEventListener("mouseenter", () => wrapEl.classList.add("zoomed"));
+      wrapEl.addEventListener("mouseleave", () => {
+        wrapEl.classList.remove("zoomed");
+        imgEl.style.transformOrigin = "center center";
+      });
+      wrapEl.addEventListener("mousemove", (e) => {
+        const rect = wrapEl.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        imgEl.style.transformOrigin = `${x}% ${y}%`;
+      });
+    }
+    // Tapping/clicking the image always opens the full lightbox — the primary
+    // zoom path on touch devices, and a secondary one alongside hover-zoom on desktop.
+    imgEl.addEventListener("click", () => openLightbox(activeGalleryIndex));
+  }
+
+  function goToGalleryIndex(i) {
+    activeGalleryIndex = (i + galleryItems.length) % galleryItems.length;
+    renderGallery();
+  }
+
+  function attachSwipe(el, onLeft, onRight) {
+    let startX = null;
+    el.addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; }, { passive: true });
+    el.addEventListener("touchend", (e) => {
+      if (startX === null) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 40) (dx < 0 ? onLeft : onRight)();
+      startX = null;
+    });
+  }
+
+  /* ---------------------------- Lightbox ---------------------------- */
+
+  function openLightbox(index) {
+    activeGalleryIndex = index;
+    renderLightboxMedia();
+    document.getElementById("lightbox").classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeLightbox() {
+    document.getElementById("lightbox").classList.remove("open");
+    document.body.style.overflow = "";
+    renderGallery();
+  }
+  function renderLightboxMedia() {
+    const item = galleryItems[activeGalleryIndex];
+    const mount = document.getElementById("lightboxMedia");
+    mount.innerHTML =
+      item.type === "video"
+        ? `<video src="${item.src}" controls autoplay playsinline></video>`
+        : `<img src="${item.src}" alt="${product.name}" />`;
+    document.getElementById("lightboxCount").textContent = `${activeGalleryIndex + 1} / ${galleryItems.length}`;
+  }
+  document.getElementById("lightboxClose").addEventListener("click", closeLightbox);
+  document.getElementById("lightbox").addEventListener("click", (e) => { if (e.target.id === "lightbox") closeLightbox(); });
+  document.getElementById("lbPrev").addEventListener("click", () => { goToGalleryIndex(activeGalleryIndex - 1); renderLightboxMedia(); });
+  document.getElementById("lbNext").addEventListener("click", () => { goToGalleryIndex(activeGalleryIndex + 1); renderLightboxMedia(); });
+  document.addEventListener("keydown", (e) => {
+    if (!document.getElementById("lightbox").classList.contains("open")) return;
+    if (e.key === "Escape") closeLightbox();
+    if (e.key === "ArrowRight") { goToGalleryIndex(activeGalleryIndex + 1); renderLightboxMedia(); }
+    if (e.key === "ArrowLeft") { goToGalleryIndex(activeGalleryIndex - 1); renderLightboxMedia(); }
+  });
+  attachSwipe(document.getElementById("lightboxStage"), () => { goToGalleryIndex(activeGalleryIndex + 1); renderLightboxMedia(); }, () => { goToGalleryIndex(activeGalleryIndex - 1); renderLightboxMedia(); });
+
+  /* ---------------------------- Size helpers ---------------------------- */
+
+  function waistLengthOptions(sizes) {
+    const waists = new Set(), lengths = new Set();
+    sizes.forEach((s) => {
+      const [w, l] = s.split("x");
+      if (w) waists.add(w);
+      if (l) lengths.add(l);
+    });
+    return { waists: [...waists].sort((a, b) => a - b), lengths: [...lengths].sort((a, b) => a - b) };
+  }
+
+  function updateAddButtonState() {
+    const addBtn = document.getElementById("addToCartBtn");
+    if (!addBtn) return;
+    const stickyBtn = document.getElementById("stickyAtcBtn");
+    if (!product.inStock) {
+      addBtn.disabled = true; addBtn.textContent = "Out of Stock";
+      if (stickyBtn) { stickyBtn.disabled = true; stickyBtn.textContent = "Out of Stock"; }
+      return;
+    }
+    if (!selectedSize) {
+      const label = product.sizeType === "waist_length" ? "Select waist & length" : "Select a size";
+      addBtn.disabled = true; addBtn.textContent = label;
+      if (stickyBtn) { stickyBtn.disabled = false; stickyBtn.textContent = "Select a Size"; }
+      return;
+    }
+    const stock = product.stockBySize[selectedSize];
+    if (stock !== undefined && Number(stock) <= 0) {
+      addBtn.disabled = true; addBtn.textContent = "Out of Stock";
+      if (stickyBtn) { stickyBtn.disabled = true; stickyBtn.textContent = "Out of Stock"; }
+      return;
+    }
+    addBtn.disabled = false;
+    addBtn.textContent = "Add to Cart";
+    if (stickyBtn) { stickyBtn.disabled = false; stickyBtn.textContent = "Add to Cart"; }
+    renderStockLine();
+  }
+
+  function renderStockLine() {
+    const el = document.getElementById("stockLine");
+    if (!el) return;
+    if (!selectedSize) { el.innerHTML = ""; return; }
+    const stock = Number(product.stockBySize[selectedSize] ?? 1);
+    if (stock <= 0) {
+      el.innerHTML = `<span class="stock-dot out"></span> Out of stock in this size`;
+      el.className = "stock-line";
+    } else if (stock <= product.lowStockThreshold) {
+      el.innerHTML = `<span class="stock-dot low"></span> Only ${stock} left — order soon`;
+      el.className = "stock-line low";
+    } else {
+      el.innerHTML = `<span class="stock-dot"></span> In stock, ready to ship`;
+      el.className = "stock-line";
+    }
+  }
+
+  /* ---------------------------- Main render ---------------------------- */
+
+  function colorSwatchesHTML() {
+    if (!variantsData.colorVariants.length) return "";
+    return `
+      <div class="pd-block" style="padding-top:0;border-top:none">
+        <div class="pd-label"><span>Color · ${product.color}</span></div>
+        <div class="color-swatches">
+          ${variantsData.colorVariants
+            .map(
+              (v) => `
+            <button class="color-swatch ${v.id === product.id ? "selected" : ""} ${!v.inStock ? "oos" : ""}" data-variant="${v.id}" title="${v.color}">
+              <img src="${v.image}" alt="${v.color}" />
+            </button>`
+            )
+            .join("")}
+        </div>
+      </div>`;
+  }
+
+  function sizeBlockHTML() {
+    if (product.sizeType === "waist_length") {
+      const { waists, lengths } = waistLengthOptions(product.sizes);
+      return `
+        <div class="pd-block">
+          <div class="pd-label"><span>Waist &amp; Length</span><a href="#">Size Guide</a></div>
+          <div class="wl-select">
+            <select id="waistSelect"><option value="">Waist</option>${waists.map((w) => `<option value="${w}">${w}"</option>`).join("")}</select>
+            <select id="lengthSelect"><option value="">Length</option>${lengths.map((l) => `<option value="${l}">${l}"</option>`).join("")}</select>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="pd-block">
+        <div class="pd-label"><span>Size</span><a href="#">Size Guide</a></div>
+        <div class="size-options" id="sizeOptions">
+          ${product.sizes
+            .map((s) => {
+              const soldOut = product.sizesOutOfStock.includes(s);
+              const low = product.sizesLowStock.includes(s);
+              return `<button class="size-option${soldOut ? " sold-out" : ""}" data-size="${s}" ${soldOut ? "disabled" : ""}>${s}${low ? " •" : ""}</button>`;
+            })
+            .join("")}
+        </div>
+        ${product.sizesOutOfStock.length ? `<p style="font-size:11.5px;color:var(--ink-soft);margin-top:8px">Greyed-out sizes are currently out of stock. A dot marks low stock.</p>` : ""}
+      </div>`;
+  }
+
+  function tagsHTML() {
+    if (!product.tags || !product.tags.length) return "";
+    return `<div style="margin-top:14px">${product.tags.map((t) => `<span class="tag-chip">${t}</span>`).join("")}</div>`;
+  }
+
+  const HEART_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20.5S3.5 15.4 3.5 9.4A4.9 4.9 0 0 1 12 6.2a4.9 4.9 0 0 1 8.5 3.2c0 6-8.5 11.1-8.5 11.1Z"/></svg>`;
+
+  const SHARE_ICONS = {
+    whatsapp: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 17.5 5 20l2.6-1.4A7.5 7.5 0 1 0 5 12c0 1.3.35 2.5.97 3.55"/></svg>`,
+    facebook: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 8.5h2.5V5H14c-2 0-3.5 1.6-3.5 3.6V11H8v3.5h2.5V21H14v-6.5h2.4l.6-3.5H14V9c0-.3.2-.5.5-.5H14Z"/></svg>`,
+    x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4l16 16M20 4 4 20"/></svg>`,
+    link: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 15l6-6M10 7l1-1a3.5 3.5 0 0 1 5 5l-1 1M14 17l-1 1a3.5 3.5 0 0 1-5-5l1-1"/></svg>`,
+  };
+
+  function shareRowHTML() {
+    return `
+    <div class="share-row">
+      <a class="share-btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(product.name + " — " + location.href)}" aria-label="Share on WhatsApp">${SHARE_ICONS.whatsapp}</a>
+      <a class="share-btn" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(location.href)}" aria-label="Share on Facebook">${SHARE_ICONS.facebook}</a>
+      <a class="share-btn" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(product.name)}&url=${encodeURIComponent(location.href)}" aria-label="Share on X">${SHARE_ICONS.x}</a>
+      <button class="share-btn" id="copyLinkBtn" type="button" aria-label="Copy link">${SHARE_ICONS.link}</button>
+    </div>`;
+  }
+
+  function renderDetail() {
+    galleryItems = buildGalleryItems(product);
+    activeGalleryIndex = 0;
+
+    document.getElementById("productDetail").innerHTML = `
+      <div>
+        <div class="gallery-main" id="galleryMain"></div>
+        <div class="gallery-thumbs" id="galleryThumbs">
+          ${galleryItems
+            .map(
+              (it, i) => `
+            <button data-i="${i}">
+              <img src="${it.thumb}" alt="View ${i + 1}" />
+              ${it.type === "video" ? `<span class="play-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l10 6-10 6V6Z"/></svg></span>` : ""}
+            </button>`
+            )
+            .join("")}
+        </div>
+      </div>
+      <div>
+        <span class="pd-cat">${product.category} · ${product.color}</span>
+        <h1 class="pd-title">${product.name}</h1>
+        <div class="pd-price">${priceBlockHTML(product)}</div>
+        <a href="#reviews" id="reviewsSummaryLink" style="display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-soft);text-decoration:none;margin-top:-10px;margin-bottom:18px"></a>
+
+        ${colorSwatchesHTML()}
+        ${sizeBlockHTML()}
+
+        <div class="pd-block">
+          <div class="pd-label"><span>Quantity</span></div>
+          <div class="qty-row">
+            <div class="qty-stepper">
+              <button id="qtyMinus" type="button" aria-label="Decrease quantity">−</button>
+              <span id="qtyValue">1</span>
+              <button id="qtyPlus" type="button" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pd-actions" style="display:flex;gap:10px">
+          <button class="btn full" id="addToCartBtn" disabled>${product.inStock ? "Select a size" : "Out of Stock"}</button>
+          <button class="wishlist-btn" id="wishlistBtn" type="button" aria-label="Save to wishlist">${HEART_ICON}</button>
+        </div>
+        <div class="stock-line" id="stockLine"></div>
+        <p class="pd-note" id="pdNote">Free shipping on orders over Rs. 5,000 · Cash on Delivery available</p>
+
+        <div class="pd-meta-row">
+          <span>SKU: ${product.sku}</span>
+          <span>Estimated delivery: ${product.estimatedDelivery}</span>
+        </div>
+        ${tagsHTML()}
+        ${shareRowHTML()}
+
+        <details class="accordion" open>
+          <summary>Description</summary>
+          <p>${product.description}</p>
+        </details>
+        <details class="accordion">
+          <summary>Fabric &amp; Material Composition</summary>
+          <p>${product.fabric}</p>
+        </details>
+        <details class="accordion">
+          <summary>Care Instructions</summary>
+          <p>${product.care}</p>
+        </details>
+        <details class="accordion">
+          <summary>Shipping &amp; Returns</summary>
+          <p>Estimated delivery: ${product.estimatedDelivery}. ${product.returnPolicy}</p>
+        </details>
+      </div>
+    `;
+
+    renderGallery();
+    attachSwipe(document.getElementById("galleryMain"), () => goToGalleryIndex(activeGalleryIndex + 1), () => goToGalleryIndex(activeGalleryIndex - 1));
+
+    document.querySelectorAll(".gallery-thumbs button").forEach((btn) => {
+      btn.addEventListener("click", () => goToGalleryIndex(Number(btn.dataset.i)));
+    });
+
+    document.querySelectorAll(".color-swatch").forEach((btn) => {
+      btn.addEventListener("click", () => switchVariant(btn.dataset.variant));
+    });
+
+    if (product.sizeType === "waist_length") {
+      const applyWL = () => {
+        const w = document.getElementById("waistSelect").value;
+        const l = document.getElementById("lengthSelect").value;
+        selectedSize = w && l ? `${w}x${l}` : null;
+        updateAddButtonState();
+      };
+      document.getElementById("waistSelect").addEventListener("change", applyWL);
+      document.getElementById("lengthSelect").addEventListener("change", applyWL);
+    } else {
+      document.querySelectorAll(".size-option").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (!product.inStock || btn.disabled) return;
+          selectedSize = btn.dataset.size;
+          document.querySelectorAll(".size-option").forEach((b) => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          updateAddButtonState();
+        });
+      });
+    }
+
+    document.getElementById("qtyMinus").addEventListener("click", () => {
+      qty = Math.max(1, qty - 1);
+      document.getElementById("qtyValue").textContent = qty;
+    });
+    document.getElementById("qtyPlus").addEventListener("click", () => {
+      qty = Math.min(10, qty + 1);
+      document.getElementById("qtyValue").textContent = qty;
+    });
+
+    document.getElementById("addToCartBtn").addEventListener("click", () => {
+      if (!selectedSize) return;
+      addToCart(product.id, selectedSize, qty);
+      announce(`${product.name}, size ${selectedSize}, added to cart.`);
+      const btn = document.getElementById("addToCartBtn");
+      btn.textContent = "Added ✓";
+      setTimeout(() => (btn.textContent = "Add to Cart"), 1400);
+    });
+
+    document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        const btn = document.getElementById("copyLinkBtn");
+        const original = btn.innerHTML;
+        btn.innerHTML = "✓";
+        setTimeout(() => (btn.innerHTML = original), 1200);
+      } catch (e) {}
+    });
+
+    setupWishlistButton();
+    setupStickyAtc();
+    updateAddButtonState();
+  }
+
+  function setupStickyAtc() {
+    const bar = document.getElementById("stickyAtc");
+    if (!bar) return;
+    document.getElementById("stickyAtcImg").src = product.images[0] || product.image;
+    document.getElementById("stickyAtcName").textContent = product.name;
+    document.getElementById("stickyAtcPrice").textContent = formatPKR(product.salePrice ?? product.price);
+
+    document.getElementById("stickyAtcBtn").addEventListener("click", () => {
+      const mainBtn = document.getElementById("addToCartBtn");
+      if (!selectedSize && product.inStock) {
+        document.querySelector(".pd-block")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      if (!mainBtn.disabled) mainBtn.click();
+    });
+
+    // Only meaningful once there's a real Add to Cart button to track — show
+    // the sticky bar once that button scrolls out of view (mobile only; CSS
+    // keeps this hidden entirely above the 800px breakpoint).
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const visible = !entry.isIntersecting && window.innerWidth <= 800;
+        bar.classList.toggle("visible", visible);
+        document.body.style.paddingBottom = visible ? "128px" : "";
+      },
+      { threshold: 0 }
+    );
+    observer.observe(document.getElementById("addToCartBtn"));
+  }
+
+  async function setupWishlistButton() {
+    const btn = document.getElementById("wishlistBtn");
+    if (!btn) return;
+    let inWishlist = false;
+    const customer = await fetchCustomerMe();
+    if (customer) {
+      try {
+        const list = await fetchWishlist();
+        inWishlist = list.some((p) => p.id === product.id);
+        btn.classList.toggle("active", inWishlist);
+      } catch (e) {}
+    }
+    btn.addEventListener("click", async () => {
+      const me = await fetchCustomerMe();
+      if (!me) {
+        window.location.href = "account.html";
+        return;
+      }
+      try {
+        if (inWishlist) {
+          await removeFromWishlist(product.id);
+          inWishlist = false;
+        } else {
+          await addToWishlist(product.id);
+          inWishlist = true;
+        }
+        btn.classList.toggle("active", inWishlist);
+      } catch (e) {}
+    });
+  }
+
+  function switchVariant(slug) {
+    location.href = `product.html?id=${encodeURIComponent(slug)}`;
+  }
+
+  /* ---------------------------- Cross-sell ---------------------------- */
+
+  function productCardHTML(p) {
+    const onSale = p.salePrice != null;
+    return `
+    <a class="product-card" href="product.html?id=${p.id}">
+      <div class="thumb">
+        ${p.badge ? `<span class="badge ${onSale ? "sale" : ""}">${p.badge}</span>` : ""}
+        <img src="${p.image}" alt="${p.name}" loading="lazy" decoding="async" />
+      </div>
+      <div class="card-body">
+        <span class="cat">${p.category}</span>
+        <h3>${p.name}</h3>
+        ${ratingSnippetHTML(p)}
+        <div class="price-row">
+          ${onSale
+            ? `<span class="price was">${formatPKR(p.price)}</span><span class="price now">${formatPKR(p.salePrice)}</span>`
+            : `<span class="price">${formatPKR(p.price)}</span>`}
+        </div>
+      </div>
+    </a>`;
+  }
+
+  function itemPrice(p) { return p.salePrice ?? p.price; }
+
+  function renderCompleteTheLook() {
+    const list = variantsData.completeTheLook;
+    const section = document.getElementById("completeTheLookSection");
+    if (!list.length) { section.style.display = "none"; return; }
+    section.style.display = "block";
+    document.getElementById("ctlGrid").innerHTML = list
+      .map(
+        (p, i) => `
+      <div class="ctl-item">
+        <a href="product.html?id=${p.id}"><img src="${p.image}" alt="${p.name}" loading="lazy" decoding="async" /></a>
+        <label>
+          <input type="checkbox" checked data-ctl-index="${i}" />
+          <span>${p.name}<span class="ctl-price">${formatPKR(itemPrice(p))}</span></span>
+        </label>
+      </div>`
+      )
+      .join("");
+
+    function recalc() {
+      const checked = [...document.querySelectorAll("[data-ctl-index]:checked")].map((cb) => list[Number(cb.dataset.ctlIndex)]);
+      const total = checked.reduce((s, p) => s + itemPrice(p), 0) + itemPrice(product);
+      document.getElementById("ctlTotal").textContent = `Total for ${checked.length + 1} items: ${formatPKR(total)}`;
+    }
+    document.querySelectorAll("[data-ctl-index]").forEach((cb) => cb.addEventListener("change", recalc));
+    recalc();
+
+    document.getElementById("ctlAddBtn").addEventListener("click", () => {
+      const checked = [...document.querySelectorAll("[data-ctl-index]:checked")].map((cb) => list[Number(cb.dataset.ctlIndex)]);
+      checked.forEach((p) => {
+        // Cross-sell items add in their first available size as a sensible default.
+        if (p.defaultSize) addToCart(p.id, p.defaultSize, 1);
+      });
+      const btn = document.getElementById("ctlAddBtn");
+      btn.textContent = "Added ✓";
+      setTimeout(() => (btn.textContent = "Add Selected to Bag"), 1400);
+    });
+  }
+
+  function renderFrequentlyBought() {
+    const list = variantsData.frequentlyBoughtWith;
+    const section = document.getElementById("fbtSection");
+    if (!list.length) { section.style.display = "none"; return; }
+    section.style.display = "block";
+
+    const all = [product, ...list];
+    document.getElementById("fbtRow").innerHTML = all
+      .map(
+        (p, i) => `
+      ${i > 0 ? `<span class="fbt-plus">+</span>` : ""}
+      <div class="fbt-thumb ${i === 0 ? "self" : ""}">
+        <input type="checkbox" class="fbt-check" checked ${i === 0 ? "disabled" : `data-fbt-index="${i - 1}"`} />
+        <img src="${p.image}" alt="${p.name}" loading="lazy" decoding="async" />
+        <p>${formatPKR(itemPrice(p))}</p>
+      </div>`
+      )
+      .join("");
+
+    function recalc() {
+      const checked = [...document.querySelectorAll("[data-fbt-index]:checked")].map((cb) => list[Number(cb.dataset.fbtIndex)]);
+      const total = checked.reduce((s, p) => s + itemPrice(p), 0) + itemPrice(product);
+      document.getElementById("fbtTotal").textContent = `Total for ${checked.length + 1} items: ${formatPKR(total)}`;
+    }
+    document.querySelectorAll("[data-fbt-index]").forEach((cb) => cb.addEventListener("change", recalc));
+    recalc();
+
+    document.getElementById("fbtAddBtn").addEventListener("click", () => {
+      const checked = [...document.querySelectorAll("[data-fbt-index]:checked")].map((cb) => list[Number(cb.dataset.fbtIndex)]);
+      checked.forEach((p) => { if (p.defaultSize) addToCart(p.id, p.defaultSize, 1); });
+      const btn = document.getElementById("fbtAddBtn");
+      btn.textContent = "Added ✓";
+      setTimeout(() => (btn.textContent = "Add Selected to Cart"), 1400);
+    });
+  }
+
+  /* ---------------------------- Reviews ---------------------------- */
+
+  let reviewState = { sort: "recent", rating: null };
+
+  function renderReviewsSummary(data) {
+    const rows = [5, 4, 3, 2, 1].map((r) => {
+      const count = data.countsByRating[r] || 0;
+      const pct = data.total ? Math.round((count / data.total) * 100) : 0;
+      return `
+        <div class="rating-bar-row">
+          <span>${r} star</span>
+          <div class="rating-bar-track"><div class="rating-bar-fill" style="width:${pct}%"></div></div>
+          <span>${count}</span>
+        </div>`;
+    }).join("");
+
+    document.getElementById("reviewsSummary").innerHTML = `
+      <div class="reviews-avg">
+        <div class="big-num">${data.average || "—"}</div>
+        ${starsHTML(data.average)}
+        <p>${data.total} review${data.total === 1 ? "" : "s"}</p>
+      </div>
+      <div class="rating-bars">${rows}</div>`;
+
+    const link = document.getElementById("reviewsSummaryLink");
+    if (link) link.innerHTML = data.total ? `${starsHTML(data.average)} <span>${data.average} (${data.total} review${data.total === 1 ? "" : "s"})</span>` : `<span>Be the first to review</span>`;
+
+    const chipsEl = document.getElementById("ratingChips");
+    chipsEl.innerHTML = [
+      `<button class="rating-chip ${!reviewState.rating ? "active" : ""}" data-r="">All (${data.total})</button>`,
+      ...[5, 4, 3, 2, 1].map((r) => `<button class="rating-chip ${reviewState.rating == r ? "active" : ""}" data-r="${r}">${r}★ (${data.countsByRating[r] || 0})</button>`),
+    ].join("");
+    chipsEl.querySelectorAll("[data-r]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        reviewState.rating = btn.dataset.r || null;
+        loadReviews();
+      });
+    });
+  }
+
+  function reviewCardHTML(r) {
+    const media = [...(r.images || []).map((src) => ({ type: "image", src })), ...(r.videoUrl ? [{ type: "video", src: r.videoUrl }] : [])];
+    return `
+    <div class="review-card">
+      <div class="review-head">
+        <div>
+          <span class="review-name">${r.customerName}</span>
+          ${r.verifiedPurchase ? `<span class="verified-badge">Verified Purchase</span>` : ""}
+        </div>
+        <span class="review-date">${new Date(r.createdAt).toLocaleDateString("en-PK", { year: "numeric", month: "short", day: "numeric" })}</span>
+      </div>
+      ${starsHTML(r.rating)}
+      ${r.title ? `<div class="review-title">${r.title}</div>` : ""}
+      <p class="review-body">${r.body}</p>
+      ${media.length ? `<div class="review-media">${media.map((m) => m.type === "video" ? `<video src="${m.src}"></video>` : `<img src="${m.src}" alt="review photo" />`).join("")}</div>` : ""}
+      <button class="review-helpful" data-review-id="${r.id}">Helpful (${r.helpfulCount})</button>
+    </div>`;
+  }
+
+  async function loadReviews() {
+    const data = await fetchProductReviews(product.id, { sort: reviewState.sort, rating: reviewState.rating });
+    renderReviewsSummary(data);
+    document.getElementById("reviewsList").innerHTML = data.reviews.length
+      ? data.reviews.map(reviewCardHTML).join("")
+      : `<p style="color:var(--ink-soft);font-size:13px;padding:20px 0">No reviews yet for this rating.</p>`;
+
+    document.querySelectorAll("[data-review-id]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        try {
+          const res = await voteReviewHelpful(product.id, btn.dataset.reviewId);
+          btn.textContent = `Helpful (${res.helpfulCount})`;
+          if (res.alreadyVoted) btn.disabled = true;
+        } catch (e) {}
+      });
+    });
+  }
+
+  document.getElementById("reviewSort").addEventListener("change", (e) => {
+    reviewState.sort = e.target.value;
+    loadReviews();
+  });
+
+  async function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function renderWriteReview() {
+    const mount = document.getElementById("writeReviewMount");
+    const customer = await fetchCustomerMe();
+    if (!customer) {
+      mount.innerHTML = `<div class="login-to-review">Purchased this? <a href="account.html">Log in</a> to leave a review.</div>`;
+      return;
+    }
+    mount.innerHTML = `
+      <div class="write-review-box">
+        <div class="pd-label"><span>Write a Review</span></div>
+        <div class="star-input" id="starInput">
+          ${[1, 2, 3, 4, 5].map((n) => `<span data-star="${n}">★</span>`).join("")}
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label for="reviewTitle">Title</label>
+          <input type="text" id="reviewTitle" placeholder="Sum it up in a few words" />
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label for="reviewBody">Review</label>
+          <textarea id="reviewBody" placeholder="What did you like or dislike? How does it fit?"></textarea>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label for="reviewPhotos">Photos (optional)</label>
+          <input type="file" id="reviewPhotos" accept="image/*" multiple />
+        </div>
+        <p id="reviewError" role="alert" style="display:none;color:var(--accent);font-size:13px;margin-top:10px"></p>
+        <button class="btn" id="submitReviewBtn" style="margin-top:16px">Submit Review</button>
+      </div>`;
+
+    let rating = 0;
+    document.querySelectorAll("#starInput span").forEach((s) => {
+      s.addEventListener("click", () => {
+        rating = Number(s.dataset.star);
+        document.querySelectorAll("#starInput span").forEach((el) => el.classList.toggle("on", Number(el.dataset.star) <= rating));
+      });
+    });
+
+    document.getElementById("submitReviewBtn").addEventListener("click", async () => {
+      const errorEl = document.getElementById("reviewError");
+      errorEl.style.display = "none";
+      if (!rating) { errorEl.textContent = "Please select a star rating."; errorEl.style.display = "block"; return; }
+      const files = [...document.getElementById("reviewPhotos").files].slice(0, 6);
+      const images = await Promise.all(files.map(fileToDataURL));
+      try {
+        await submitReview(product.id, {
+          rating,
+          title: document.getElementById("reviewTitle").value.trim(),
+          body: document.getElementById("reviewBody").value.trim(),
+          images,
+        });
+        renderWriteReview();
+        reviewState = { sort: "recent", rating: null };
+        loadReviews();
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = "block";
+      }
+    });
+  }
+
+  /* ---------------------------- Boot ---------------------------- */
+
+  function injectProductSchema(p) {
+    const productLd = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: p.name,
+      image: p.images && p.images.length ? p.images : [p.image],
+      description: p.description || `${p.name} at Kelsworth.`,
+      sku: p.sku,
+      brand: { "@type": "Brand", name: "Kelsworth" },
+      offers: {
+        "@type": "Offer",
+        url: location.href,
+        priceCurrency: "PKR",
+        price: p.salePrice ?? p.price,
+        availability: p.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      },
+    };
+    if (p.reviewCount) {
+      productLd.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: p.rating,
+        reviewCount: p.reviewCount,
+      };
+    }
+    const breadcrumbLd = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${location.origin}/index.html` },
+        { "@type": "ListItem", position: 2, name: "Men's Denim", item: `${location.origin}/collection.html` },
+        { "@type": "ListItem", position: 3, name: p.name, item: location.href },
+      ],
+    };
+    [productLd, breadcrumbLd].forEach((data) => {
+      const tag = document.createElement("script");
+      tag.type = "application/ld+json";
+      tag.textContent = JSON.stringify(data);
+      document.head.appendChild(tag);
+    });
+  }
+
+  (async () => {
+    product = await fetchProductById(productIdParam);
+    if (!product) {
+      const all = await fetchProducts();
+      product = all[0];
+    }
+    document.getElementById("pageTitleTag").textContent = `${product.name} — Kelsworth`;
+    const shareTitle = `${product.name} — Kelsworth`;
+    const shareDesc = product.description || `Shop ${product.name} at Kelsworth.`;
+    document.getElementById("metaDescription").setAttribute("content", shareDesc);
+    document.getElementById("ogTitle").setAttribute("content", shareTitle);
+    document.getElementById("ogDescription").setAttribute("content", shareDesc);
+    document.getElementById("twitterTitle").setAttribute("content", shareTitle);
+    document.getElementById("twitterDescription").setAttribute("content", shareDesc);
+    document.getElementById("crumbName").textContent = product.name;
+    document.getElementById("canonicalLink").setAttribute("href", `https://www.kelsworth.com/product.html?id=${product.id}`);
+    injectProductSchema(product);
+
+    variantsData = await fetchProductVariants(product.id);
+    addRecentlyViewed(product.id);
+    renderDetail();
+    renderCompleteTheLook();
+    renderFrequentlyBought();
+
+    document.getElementById("relatedGrid").innerHTML = variantsData.related.slice(0, 4).map(productCardHTML).join("");
+
+    renderWriteReview();
+    loadReviews();
+  })();
+</script>
+</body>
+</html>

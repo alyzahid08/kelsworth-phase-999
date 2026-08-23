@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Promo Codes — Kelsworth Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="adminSidebar"></aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Promo Codes</h1>
+        <p>Discount codes customers can apply at checkout.</p>
+      </div>
+      <button class="btn" id="newPromoBtn">+ Add Code</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Discount</th>
+          <th>Min. Order</th>
+          <th>Expires</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="promoBody">
+        <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<div class="modal-overlay" id="promoModal">
+  <div class="modal-box" style="max-width:420px">
+    <button class="modal-close" id="closeModal">✕</button>
+    <h3>Add Promo Code</h3>
+    <form id="promoForm">
+      <div class="field" style="margin-bottom:14px">
+        <label for="f_code">Code</label>
+        <input type="text" id="f_code" placeholder="SAVE10" required style="text-transform:uppercase" />
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label for="f_discount">Discount Percent</label>
+        <input type="number" id="f_discount" min="1" max="100" required />
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label for="f_minSubtotal">Minimum Order (Rs., optional)</label>
+        <input type="number" id="f_minSubtotal" min="0" value="0" />
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label for="f_expiresAt">Expires (optional)</label>
+        <input type="date" id="f_expiresAt" />
+      </div>
+      <p id="formError" style="display:none;color:var(--accent);font-size:13px;margin-bottom:10px"></p>
+      <div class="modal-actions">
+        <button type="submit" class="btn">Save Code</button>
+        <button type="button" class="btn outline" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+  mountAdminChrome("promo");
+
+  let currentPromos = [];
+
+  function rowHTML(p) {
+    const expires = p.expires_at ? new Date(p.expires_at).toLocaleDateString("en-PK", { dateStyle: "medium" }) : "Never";
+    return `
+      <tr>
+        <td style="font-family:var(--font-mono)">${p.code}</td>
+        <td>${p.discount_percent}%</td>
+        <td>${p.min_subtotal > 0 ? formatPKR(p.min_subtotal) : "None"}</td>
+        <td>${expires}</td>
+        <td>${p.active ? '<span class="status-pill delivered">Active</span>' : '<span class="status-pill cancelled">Disabled</span>'}</td>
+        <td>
+          <div class="row-actions">
+            <button data-toggle="${p.id}">${p.active ? "Disable" : "Enable"}</button>
+            <button data-delete="${p.id}" class="danger">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+  }
+
+  function renderTable() {
+    const body = document.getElementById("promoBody");
+    body.innerHTML = currentPromos.length
+      ? currentPromos.map(rowHTML).join("")
+      : `<tr class="empty-row"><td colspan="6">No promo codes yet.</td></tr>`;
+
+    body.querySelectorAll("[data-toggle]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const p = currentPromos.find((x) => x.id === Number(btn.dataset.toggle));
+        try {
+          const updated = await adminFetch(`/api/admin/promo-codes/${p.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ active: !p.active }),
+          });
+          currentPromos = currentPromos.map((x) => (x.id === updated.id ? updated : x));
+          renderTable();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+    body.querySelectorAll("[data-delete]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const p = currentPromos.find((x) => x.id === Number(btn.dataset.delete));
+        if (!confirm(`Delete code "${p.code}"?`)) return;
+        try {
+          await adminFetch(`/api/admin/promo-codes/${p.id}`, { method: "DELETE" });
+          currentPromos = currentPromos.filter((x) => x.id !== p.id);
+          renderTable();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+  }
+
+  const modal = document.getElementById("promoModal");
+  const form = document.getElementById("promoForm");
+  document.getElementById("newPromoBtn").addEventListener("click", () => {
+    form.reset();
+    document.getElementById("formError").style.display = "none";
+    modal.classList.add("open");
+  });
+  document.getElementById("closeModal").addEventListener("click", () => modal.classList.remove("open"));
+  document.getElementById("cancelBtn").addEventListener("click", () => modal.classList.remove("open"));
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById("formError");
+    errorEl.style.display = "none";
+    const body = {
+      code: document.getElementById("f_code").value.trim(),
+      discountPercent: Number(document.getElementById("f_discount").value),
+      minSubtotal: Number(document.getElementById("f_minSubtotal").value || 0),
+      expiresAt: document.getElementById("f_expiresAt").value || null,
+    };
+    try {
+      const created = await adminFetch("/api/admin/promo-codes", { method: "POST", body: JSON.stringify(body) });
+      currentPromos.unshift(created);
+      modal.classList.remove("open");
+      renderTable();
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = "block";
+    }
+  });
+
+  (async () => {
+    try {
+      currentPromos = await adminFetch("/api/admin/promo-codes");
+      renderTable();
+    } catch (err) {
+      document.getElementById("promoBody").innerHTML = `<tr class="empty-row"><td colspan="6">${err.message}</td></tr>`;
+    }
+  })();
+</script>
+</body>
+</html>

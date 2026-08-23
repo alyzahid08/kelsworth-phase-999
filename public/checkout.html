@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Checkout — Kelsworth</title>
+<meta name="description" content="Complete your order at Kelsworth. Cash on Delivery available across Pakistan." />
+<meta name="robots" content="noindex, follow" />
+<meta property="og:site_name" content="Kelsworth" />
+<meta property="og:title" content="Checkout — Kelsworth" />
+<meta property="og:description" content="Complete your order at Kelsworth. Cash on Delivery available across Pakistan." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="/images/og-banner.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Checkout — Kelsworth" />
+<meta name="twitter:description" content="Complete your order at Kelsworth. Cash on Delivery available across Pakistan." />
+<meta name="twitter:image" content="/images/og-banner.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="site-header" id="site-header"></header>
+
+<div id="main-content" tabindex="-1" class="container">
+  <div class="breadcrumb"><a href="index.html">Home</a> / <a href="cart.html">Cart</a> / <span>Checkout</span></div>
+  <div class="collection-head"><h1>Checkout</h1></div>
+
+  <div id="checkoutContent">
+    <p style="font-family:var(--font-mono);font-size:12px;color:var(--ink-soft)">Loading…</p>
+  </div>
+</div>
+
+<datalist id="pkCityList">
+  <option value="Karachi"></option>
+  <option value="Lahore"></option>
+  <option value="Islamabad"></option>
+  <option value="Rawalpindi"></option>
+  <option value="Faisalabad"></option>
+  <option value="Multan"></option>
+  <option value="Peshawar"></option>
+  <option value="Quetta"></option>
+  <option value="Sialkot"></option>
+  <option value="Hyderabad"></option>
+  <option value="Gujranwala"></option>
+  <option value="Bahawalpur"></option>
+  <option value="Sargodha"></option>
+  <option value="Sukkur"></option>
+  <option value="Abbottabad"></option>
+</datalist>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<div class="sticky-checkout-bar" id="stickyCheckoutBar">
+  <div class="sc-total"><span>Total</span><strong id="stickyCheckoutTotal"></strong></div>
+  <button class="btn" type="submit" form="checkoutForm" id="stickyPlaceOrderBtn">Place Order</button>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/site.js"></script>
+<script>
+  mountChrome("cart");
+
+  const SHIP_THRESHOLD = 5000;
+  const SHIP_FLAT = 250;
+  const TAX_RATE = 0; // prices are tax-inclusive today — see routes/orders.js
+
+  let selectedAddressId = "new";
+  let giftChecked = false;
+  let selectedPaymentMethod = "cod";
+
+  function isPlausiblePhone(phone) {
+    const digits = String(phone || "").replace(/\D/g, "");
+    return digits.length >= 10 && digits.length <= 13;
+  }
+
+  function summaryHTML(lines, subtotal, shipping, tax, discount, promoCode, total) {
+    return `
+      <div class="summary-card">
+        <h3>Order Summary</h3>
+        ${lines
+          .map(
+            (l) => `
+          <div class="summary-row" style="align-items:center">
+            <span style="display:flex;align-items:center;gap:10px">
+              <img src="${l.product.image}" alt="${l.product.name}" style="width:44px;height:52px;object-fit:cover;border:1px solid var(--line);background:var(--paper-alt)" />
+              <span>${l.product.name}<br><span style="color:var(--ink-soft);font-size:11.5px">Size ${l.size} × ${l.qty}</span></span>
+            </span>
+            <span>${formatPKR(l.lineTotal)}</span>
+          </div>`
+          )
+          .join("")}
+        <a href="cart.html" style="display:inline-block;font-family:var(--font-mono);font-size:11px;text-decoration:underline;color:var(--ink-soft);margin:6px 0 10px">Edit cart</a>
+        <div class="summary-row"><span>Estimated Shipping</span><span>${shipping === 0 ? "Free" : formatPKR(shipping)}</span></div>
+        <div class="summary-row"><span>Estimated Tax</span><span>${tax === 0 ? "Included" : formatPKR(tax)}</span></div>
+        ${discount > 0 ? `<div class="summary-row"><span>Promo (${promoCode})</span><span>−${formatPKR(discount)}</span></div>` : ""}
+        <div class="summary-row total"><span>Total</span><span>${formatPKR(total)}</span></div>
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:12px">Estimated delivery: 3–5 working days in major cities, 5–7 elsewhere.</p>
+      </div>`;
+  }
+
+  function addressPickerHTML(addresses) {
+    if (!addresses.length) return "";
+    return `
+      <div class="form-section">
+        <h3>Address Book</h3>
+        <div class="address-picker" id="addressPicker">
+          ${addresses
+            .map(
+              (a) => `
+            <label class="address-card ${selectedAddressId === String(a.id) ? "selected" : ""}" data-address-card="${a.id}">
+              <input type="radio" name="addressChoice" value="${a.id}" ${selectedAddressId === String(a.id) ? "checked" : ""} />
+              <div>
+                <div class="ac-label">${a.label}${a.isDefault ? " · Default" : ""}</div>
+                <div class="ac-name">${a.firstName} ${a.lastName}</div>
+                <div class="ac-detail">${a.address}, ${a.city} ${a.postalCode || ""}</div>
+                <div class="ac-detail">${a.phone}</div>
+              </div>
+            </label>`
+            )
+            .join("")}
+          <label class="address-card new-address ${selectedAddressId === "new" ? "selected" : ""}" data-address-card="new">
+            <input type="radio" name="addressChoice" value="new" ${selectedAddressId === "new" ? "checked" : ""} style="display:none" />
+            + Enter a new address
+          </label>
+        </div>
+      </div>`;
+  }
+
+  async function renderForm() {
+    const lines = await cartLinesWithProducts();
+    const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);
+    const shipping = subtotal >= SHIP_THRESHOLD || subtotal === 0 ? 0 : SHIP_FLAT;
+    const tax = Math.round(subtotal * TAX_RATE);
+
+    const appliedCode = getAppliedPromoCode();
+    let discount = 0;
+    if (appliedCode) {
+      try {
+        const result = await validatePromoCode(appliedCode, subtotal);
+        discount = result.discountAmount;
+      } catch (e) {
+        clearPromoCode();
+      }
+    }
+    const total = subtotal + shipping + tax - discount;
+
+    let paymentMethods = [{ id: "cod", label: "Cash on Delivery", description: "Pay when your order arrives" }];
+    try {
+      paymentMethods = await fetchPaymentMethods();
+    } catch (e) { /* fall back to COD-only above */ }
+    if (!selectedPaymentMethod || !paymentMethods.some((m) => m.id === selectedPaymentMethod)) {
+      selectedPaymentMethod = paymentMethods[0].id;
+    }
+
+    // Prefill contact/shipping fields if the visitor is logged in, and load
+    // their saved addresses. Guests skip straight to a blank form — no
+    // account required to check out.
+    let prefill = null;
+    let addresses = [];
+    try {
+      prefill = await fetchCustomerMe();
+      if (prefill) addresses = await fetchAddresses();
+    } catch (e) {
+      prefill = null;
+    }
+    const defaultAddress = addresses.find((a) => a.isDefault) || addresses[0] || null;
+    if (defaultAddress && selectedAddressId === "new" && addresses.length) selectedAddressId = String(defaultAddress.id);
+    const chosen = addresses.find((a) => String(a.id) === selectedAddressId) || null;
+
+    document.getElementById("checkoutContent").innerHTML = `
+      <div class="checkout-layout">
+        <form id="checkoutForm">
+          <p id="formError" role="alert" style="display:none;color:var(--accent);font-size:13px;margin-bottom:16px"></p>
+          ${prefill
+            ? `<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:16px">Checking out as <strong>${prefill.email}</strong> — <a href="account.html" style="text-decoration:underline">not you?</a></p>`
+            : `<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;border:1px dashed var(--line);padding:12px 14px">Checking out as a guest. <a href="account.html" style="text-decoration:underline">Log in</a> for faster checkout with saved addresses — or just continue below, no account needed.</p>`}
+
+          <div class="form-section">
+            <h3>Contact Information</h3>
+            <div class="form-grid">
+              <div class="field full">
+                <label for="email">Email</label>
+                <input type="email" id="email" required value="${prefill ? prefill.email : ""}" />
+              </div>
+              <div class="field" id="phoneField">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" required placeholder="03XX-XXXXXXX" value="${chosen ? chosen.phone : prefill && prefill.phone ? prefill.phone : ""}" />
+                <span class="phone-error">Please enter a valid phone number.</span>
+              </div>
+            </div>
+          </div>
+
+          ${addressPickerHTML(addresses)}
+
+          <div class="form-section" id="shippingSection">
+            <h3>Shipping Address</h3>
+            <div class="form-grid">
+              <div class="field">
+                <label for="fname">First Name</label>
+                <input type="text" id="fname" required value="${chosen ? chosen.firstName : prefill ? prefill.firstName : ""}" />
+              </div>
+              <div class="field">
+                <label for="lname">Last Name</label>
+                <input type="text" id="lname" required value="${chosen ? chosen.lastName : prefill ? prefill.lastName : ""}" />
+              </div>
+              <div class="field full">
+                <label for="address">Street Address</label>
+                <input type="text" id="address" required value="${chosen ? chosen.address : ""}" />
+              </div>
+              <div class="field">
+                <label for="city">City</label>
+                <input type="text" id="city" required list="pkCityList" autocomplete="off" value="${chosen ? chosen.city : ""}" />
+              </div>
+              <div class="field">
+                <label for="postal">Postal Code</label>
+                <input type="text" id="postal" value="${chosen ? chosen.postalCode : ""}" />
+              </div>
+              <div class="field full">
+                <label for="deliveryNotes">Delivery Notes (optional)</label>
+                <textarea id="deliveryNotes" placeholder="Landmark, gate code, best time to deliver…"></textarea>
+              </div>
+            </div>
+            ${prefill ? `
+            <div class="checkbox-field">
+              <input type="checkbox" id="saveAddress" ${addresses.length ? "" : "checked"} />
+              <label for="saveAddress">Save this address for next time</label>
+            </div>` : ""}
+          </div>
+
+          <div class="form-section">
+            <div class="checkbox-field" style="margin-bottom:${giftChecked ? "14px" : "4px"}">
+              <input type="checkbox" id="isGift" ${giftChecked ? "checked" : ""} />
+              <label for="isGift">This order is a gift</label>
+            </div>
+            <div class="gift-message-box field full" id="giftMessageBox" style="display:${giftChecked ? "block" : "none"}">
+              <label for="giftMessage">Gift Message (optional)</label>
+              <textarea id="giftMessage" placeholder="Add a note to include with the order…"></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Payment Method</h3>
+            <div class="payment-options">
+              ${paymentMethods
+                .map(
+                  (m) => `
+                <label class="payment-option ${selectedPaymentMethod === m.id ? "selected" : ""}" data-payment-option="${m.id}">
+                  <input type="radio" name="payment" value="${m.id}" ${selectedPaymentMethod === m.id ? "checked" : ""} />
+                  <div>
+                    <div class="po-name">${m.label}</div>
+                    <div class="po-note">${m.description}</div>
+                  </div>
+                </label>`
+                )
+                .join("")}
+            </div>
+          </div>
+
+          <button type="submit" class="btn full" id="placeOrderBtn">Place Order</button>
+          <p class="pd-note" style="text-align:center;margin-top:12px">${
+            selectedPaymentMethod === "cod"
+              ? "Your order is saved to our system when you place it — we'll send a WhatsApp message asking you to confirm before it ships."
+              : "You'll be taken to a secure payment page to complete your order."
+          }</p>
+        </form>
+
+        ${summaryHTML(lines, subtotal, shipping, tax, discount, appliedCode, total)}
+      </div>`;
+
+    const stickyTotalEl = document.getElementById("stickyCheckoutTotal");
+    if (stickyTotalEl) stickyTotalEl.textContent = formatPKR(total);
+
+    document.querySelectorAll("[data-address-card]").forEach((card) => {
+      card.addEventListener("click", () => {
+        selectedAddressId = card.dataset.addressCard;
+        renderForm();
+      });
+    });
+
+    const isGiftCb = document.getElementById("isGift");
+    if (isGiftCb) {
+      isGiftCb.addEventListener("change", (e) => {
+        giftChecked = e.target.checked;
+        document.getElementById("giftMessageBox").style.display = giftChecked ? "block" : "none";
+      });
+    }
+
+    document.querySelectorAll("[data-payment-option]").forEach((opt) => {
+      opt.addEventListener("click", () => {
+        selectedPaymentMethod = opt.dataset.paymentOption;
+        renderForm();
+      });
+    });
+
+    const phoneInput = document.getElementById("phone");
+    const phoneField = document.getElementById("phoneField");
+    const validatePhoneField = () => {
+      const ok = !phoneInput.value || isPlausiblePhone(phoneInput.value);
+      phoneField.classList.toggle("has-error", !ok);
+      return ok;
+    };
+    phoneInput.addEventListener("blur", validatePhoneField);
+    phoneInput.addEventListener("input", () => phoneField.classList.remove("has-error"));
+
+    document.getElementById("checkoutForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("formError");
+      const btn = document.getElementById("placeOrderBtn");
+      errorEl.style.display = "none";
+
+      if (!validatePhoneField()) {
+        errorEl.textContent = "Please enter a valid phone number.";
+        errorEl.style.display = "block";
+        phoneInput.focus();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Placing order…";
+      const stickyBtn = document.getElementById("stickyPlaceOrderBtn");
+      if (stickyBtn) { stickyBtn.disabled = true; stickyBtn.textContent = "Placing order…"; }
+
+      const giftMessageEl = document.getElementById("giftMessage");
+      const saveAddressEl = document.getElementById("saveAddress");
+
+      const payload = {
+        items: getCart().map((l) => ({ productId: l.productId, size: l.size, qty: l.qty })),
+        customer: {
+          firstName: document.getElementById("fname").value,
+          lastName: document.getElementById("lname").value,
+          email: document.getElementById("email").value,
+          phone: phoneInput.value,
+          address: document.getElementById("address").value,
+          city: document.getElementById("city").value,
+          postalCode: document.getElementById("postal").value,
+        },
+        promoCode: getAppliedPromoCode() || undefined,
+        deliveryNotes: document.getElementById("deliveryNotes").value || undefined,
+        giftMessage: giftChecked && giftMessageEl ? giftMessageEl.value || undefined : undefined,
+        saveAddress: saveAddressEl ? saveAddressEl.checked : false,
+        paymentMethod: selectedPaymentMethod,
+      };
+
+      try {
+        const order = await submitOrder(payload);
+        clearCart();
+
+        const GATEWAY_REDIRECT_METHODS = ["jazzcash", "easypaisa", "payfast"];
+        if (GATEWAY_REDIRECT_METHODS.includes(selectedPaymentMethod)) {
+          // Order exists but is unpaid — send the browser to the gateway's
+          // hosted checkout page to complete payment. This requires a real
+          // form POST (the secure hash travels as a form field, not a URL param).
+          const gatewayLabel = paymentMethods.find((m) => m.id === selectedPaymentMethod)?.label || "the payment gateway";
+          document.getElementById("checkoutContent").innerHTML = `
+            <div class="confirm-box">
+              <h2>Redirecting you to ${gatewayLabel}…</h2>
+              <p>Order #${order.orderNumber} is saved — complete payment on the next page to confirm it.</p>
+            </div>`;
+          try {
+            const intent = await createPaymentIntent({
+              amount: order.total,
+              paymentMethod: selectedPaymentMethod,
+              orderNumber: order.orderNumber,
+              email: payload.customer.email,
+              phone: payload.customer.phone,
+            });
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = intent.gatewayUrl;
+            form.style.display = "none";
+            Object.entries(intent.formFields).forEach(([name, value]) => {
+              const input = document.createElement("input");
+              input.type = "hidden";
+              input.name = name;
+              input.value = value;
+              form.appendChild(input);
+            });
+            document.body.appendChild(form);
+            form.submit();
+          } catch (payErr) {
+            document.getElementById("checkoutContent").innerHTML = `
+              <div class="confirm-box">
+                <h2>Order placed, but payment couldn't start</h2>
+                <p>Order #${order.orderNumber} is saved as unpaid. ${payErr.message} Please <a href="track.html" style="text-decoration:underline">check your order</a> or contact us to complete payment.</p>
+              </div>`;
+          }
+          return;
+        }
+
+        const stickyBar = document.getElementById("stickyCheckoutBar");
+        if (stickyBar) stickyBar.style.display = "none";
+        document.getElementById("checkoutContent").innerHTML = `
+          <div class="confirm-box">
+            <div class="check">✓</div>
+            <h2>Order Placed</h2>
+            <p>Thanks — a confirmation has been sent to ${payload.customer.email}.</p>
+            <div class="order-id">Order #${order.orderNumber}</div>
+            <p>Total: ${formatPKR(order.total)}${selectedPaymentMethod === "cod" ? " · You'll pay by Cash on Delivery when your order arrives." : ""}</p>
+            ${selectedPaymentMethod === "cod" ? `<p style="font-size:12.5px;color:var(--ink-soft)">We've sent a WhatsApp message to ${payload.customer.phone} — please confirm it there so we can start packing your order.</p>` : ""}
+            ${order.giftMessage ? `<p style="font-size:12.5px;color:var(--ink-soft)">Gift message included: “${order.giftMessage}”</p>` : ""}
+            <p style="font-size:12.5px;color:var(--ink-soft)">You can check this order's status any time on our <a href="track.html" style="text-decoration:underline">order tracking page</a>.</p>
+            <div style="margin-top:24px">
+              <a href="collection.html" class="btn outline">Continue Shopping</a>
+            </div>
+          </div>`;
+      } catch (err) {
+        errorEl.textContent = err.message || "Something went wrong. Please try again.";
+        errorEl.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "Place Order";
+        if (stickyBtn) { stickyBtn.disabled = false; stickyBtn.textContent = "Place Order"; }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  }
+
+  (async () => {
+    const cart = getCart();
+    if (cart.length === 0) {
+      const stickyBar = document.getElementById("stickyCheckoutBar");
+      if (stickyBar) stickyBar.style.display = "none";
+      document.getElementById("checkoutContent").innerHTML = `
+        <div class="empty-cart">
+          <h2>Your cart is empty</h2>
+          <p>Add something before heading to checkout.</p>
+          <a href="collection.html" class="btn">Shop Men's Denim</a>
+        </div>`;
+    } else {
+      renderForm();
+    }
+  })();
+</script>
+</body>
+</html>

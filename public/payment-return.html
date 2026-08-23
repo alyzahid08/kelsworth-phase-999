@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Payment Result — Kelsworth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="site-header" id="site-header"></header>
+
+<div id="main-content" tabindex="-1" class="container">
+  <div class="static-page" style="max-width:560px;text-align:center;padding:60px 0" id="resultState"></div>
+</div>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/site.js"></script>
+<script>
+  mountChrome("");
+
+  const el = document.getElementById("resultState");
+  const params = new URLSearchParams(window.location.search);
+  const orderNumber = params.get("order");
+  const status = params.get("status");
+
+  if (status === "paid") {
+    el.innerHTML = `<div class="check" style="font-size:40px;margin-bottom:10px">✓</div><h1>Payment received</h1><p>Order <strong>${orderNumber || ""}</strong> is paid and will be packed shortly. A confirmation has been sent to your WhatsApp and email.</p><div style="margin-top:20px"><a href="track.html" class="btn outline">Track your order</a></div>`;
+  } else if (status === "failed") {
+    el.innerHTML = `<h1>Payment didn't go through</h1><p>Order <strong>${orderNumber || ""}</strong> is saved but still unpaid. This can happen if the payment was cancelled or declined — no charge was made.</p><div style="margin-top:20px"><a href="checkout.html" class="btn">Try again</a> <a href="contact.html" class="btn outline">Contact us</a></div>`;
+  } else {
+    el.innerHTML = `<h1>Missing payment details</h1><p>We couldn't tell how this payment went. If you completed a payment, please <a href="contact.html">contact us</a> with your order number and we'll confirm it.</p>`;
+  }
+</script>
+</body>
+</html>

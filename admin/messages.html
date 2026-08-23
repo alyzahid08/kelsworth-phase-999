@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Messages — Kelsworth Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="adminSidebar"></aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Messages</h1>
+        <p>Submissions from the storefront contact form.</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>From</th>
+          <th>Subject</th>
+          <th>Message</th>
+          <th>Received</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="messagesBody">
+        <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+  mountAdminChrome("messages");
+
+  let currentMessages = [];
+
+  function rowHTML(m) {
+    const truncated = m.message.length > 100 ? m.message.slice(0, 100) + "…" : m.message;
+    return `
+      <tr style="${m.is_read ? "" : "font-weight:600"}">
+        <td>${m.is_read ? "" : '<span class="status-pill pending" style="font-size:9px">New</span>'}</td>
+        <td>${m.name}<br><a href="mailto:${m.email}" style="color:var(--ink-soft);font-size:12px;text-decoration:underline">${m.email}</a></td>
+        <td>${m.subject}</td>
+        <td style="max-width:320px;font-weight:400">${truncated}</td>
+        <td style="font-weight:400">${formatDate(m.created_at)}</td>
+        <td>
+          <div class="row-actions">
+            <button data-toggle-read="${m.id}">${m.is_read ? "Mark Unread" : "Mark Read"}</button>
+            <button data-delete="${m.id}" class="danger">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+  }
+
+  function renderTable() {
+    const body = document.getElementById("messagesBody");
+    body.innerHTML = currentMessages.length
+      ? currentMessages.map(rowHTML).join("")
+      : `<tr class="empty-row"><td colspan="6">No messages yet.</td></tr>`;
+
+    body.querySelectorAll("[data-toggle-read]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = Number(btn.dataset.toggleRead);
+        const m = currentMessages.find((x) => x.id === id);
+        try {
+          await adminFetch(`/api/admin/contact-messages/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ isRead: !m.is_read }),
+          });
+          m.is_read = !m.is_read;
+          renderTable();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+    body.querySelectorAll("[data-delete]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Delete this message?")) return;
+        const id = Number(btn.dataset.delete);
+        try {
+          await adminFetch(`/api/admin/contact-messages/${id}`, { method: "DELETE" });
+          currentMessages = currentMessages.filter((x) => x.id !== id);
+          renderTable();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+  }
+
+  (async () => {
+    try {
+      currentMessages = await adminFetch("/api/admin/contact-messages");
+      renderTable();
+    } catch (err) {
+      document.getElementById("messagesBody").innerHTML = `<tr class="empty-row"><td colspan="6">${err.message}</td></tr>`;
+    }
+  })();
+</script>
+</body>
+</html>

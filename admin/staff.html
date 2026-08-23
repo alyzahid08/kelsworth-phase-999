@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Staff — Kelsworth Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="css/admin.css" />
+<style>
+  .role-pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--ink);
+  }
+  .role-pill.super_admin   { border-color: var(--accent); color: var(--accent); }
+  .role-pill.manager       { border-color: var(--denim); color: var(--denim); }
+  .role-pill.order_manager { border-color: var(--ink-soft); color: var(--ink-soft); }
+  .role-pill.viewer        { border-color: var(--line); color: var(--line); }
+
+  .status-pill.active-status   { border-color: #2f6b3a; color: #2f6b3a; }
+  .status-pill.inactive-status { border-color: var(--accent); color: var(--accent); }
+
+  .form-grid .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .form-grid .toggle-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+  .form-grid .toggle-row label {
+    text-transform: none;
+    font-family: var(--font-body);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="adminSidebar"></aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h1>Staff</h1>
+        <p>Manage admin accounts — roles, access, and activations.</p>
+      </div>
+      <button class="btn" id="newStaffBtn">+ Add Staff</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="staffBody">
+        <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<div class="modal-overlay" id="staffModal">
+  <div class="modal-box" style="max-width:480px">
+    <button class="modal-close" id="closeModal">&#x2715;</button>
+    <h3 id="modalTitle">Add Staff</h3>
+    <form id="staffForm">
+      <input type="hidden" id="staffDbId" />
+      <div class="form-grid">
+        <div class="field" style="margin-bottom:14px">
+          <label for="f_username">Username</label>
+          <input type="text" id="f_username" required autocomplete="off" />
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label for="f_password">Password</label>
+          <input type="password" id="f_password" autocomplete="new-password" />
+          <span id="passwordHint" style="font-size:11px;color:var(--ink-soft);font-family:var(--font-mono)">Leave blank when editing to keep current password.</span>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label for="f_fullName">Full Name</label>
+          <input type="text" id="f_fullName" required />
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label for="f_role">Role</label>
+          <select id="f_role" required>
+            <option value="super_admin">Super Admin</option>
+            <option value="manager">Manager</option>
+            <option value="order_manager">Order Manager</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        </div>
+        <div class="field full checkbox-row" style="margin-bottom:14px">
+          <input type="checkbox" id="f_active" checked />
+          <label for="f_active" style="text-transform:none;font-family:var(--font-body);font-size:13px">Active (can log in)</label>
+        </div>
+      </div>
+      <p id="formError" style="display:none;color:var(--accent);font-size:13px;margin-bottom:10px"></p>
+      <div class="modal-actions">
+        <button type="submit" class="btn" id="saveBtn">Save Staff</button>
+        <button type="button" class="btn outline" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+  mountAdminChrome("staff");
+
+  let currentStaff = [];
+  let myStaffId = null;
+
+  const ROLE_LABELS = {
+    super_admin: "Super Admin",
+    manager: "Manager",
+    order_manager: "Order Mgr",
+    viewer: "Viewer"
+  };
+
+  function rolePill(role) {
+    const label = ROLE_LABELS[role] || role;
+    return `<span class="role-pill ${role}">${label}</span>`;
+  }
+
+  function statusPill(active) {
+    return active
+      ? '<span class="status-pill active-status">Active</span>'
+      : '<span class="status-pill inactive-status">Inactive</span>';
+  }
+
+  function rowHTML(s) {
+    const isMe = s.id === myStaffId;
+    return `
+      <tr>
+        <td style="font-family:var(--font-mono)">${s.username}${isMe ? ' <span style="font-size:10px;color:var(--denim)">(you)</span>' : ''}</td>
+        <td>${s.full_name}</td>
+        <td>${rolePill(s.role)}</td>
+        <td>${statusPill(s.active)}</td>
+        <td style="font-family:var(--font-mono);font-size:12px;color:var(--ink-soft)">${formatDate(s.created_at)}</td>
+        <td>
+          <div class="row-actions">
+            <button data-edit="${s.id}">Edit</button>
+            <button data-toggle="${s.id}">${s.active ? "Deactivate" : "Activate"}</button>
+            ${isMe ? '' : `<button data-delete="${s.id}" class="danger">Delete</button>`}
+          </div>
+        </td>
+      </tr>`;
+  }
+
+  function renderTable() {
+    const body = document.getElementById("staffBody");
+    body.innerHTML = currentStaff.length
+      ? currentStaff.map(rowHTML).join("")
+      : `<tr class="empty-row"><td colspan="6">No staff accounts yet.</td></tr>`;
+
+    body.querySelectorAll("[data-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const s = currentStaff.find((x) => x.id === Number(btn.dataset.edit));
+        if (s) openModal(s);
+      });
+    });
+
+    body.querySelectorAll("[data-toggle]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const s = currentStaff.find((x) => x.id === Number(btn.dataset.toggle));
+        if (!s) return;
+        try {
+          const updated = await adminFetch(`/api/admin/staff/${s.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ active: !s.active }),
+          });
+          currentStaff = currentStaff.map((x) => (x.id === updated.id ? updated : x));
+          renderTable();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+
+    body.querySelectorAll("[data-delete]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const s = currentStaff.find((x) => x.id === Number(btn.dataset.delete));
+        if (!s) return;
+        if (s.id === myStaffId) {
+          alert("You cannot delete your own account.");
+          return;
+        }
+        if (!confirm(`Delete "${s.username}"? This can't be undone.`)) return;
+        try {
+          await adminFetch(`/api/admin/staff/${s.id}`, { method: "DELETE" });
+          currentStaff = currentStaff.filter((x) => x.id !== s.id);
+          renderTable();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+  }
+
+  /* ── Modal ── */
+
+  const modal = document.getElementById("staffModal");
+  const form = document.getElementById("staffForm");
+
+  function openModal(staff) {
+    document.getElementById("formError").style.display = "none";
+    form.reset();
+    document.getElementById("f_active").checked = true;
+
+    if (staff) {
+      document.getElementById("modalTitle").textContent = "Edit Staff";
+      document.getElementById("staffDbId").value = staff.id;
+      document.getElementById("f_username").value = staff.username;
+      document.getElementById("f_password").value = "";
+      document.getElementById("f_password").removeAttribute("required");
+      document.getElementById("passwordHint").style.display = "block";
+      document.getElementById("f_fullName").value = staff.full_name;
+      document.getElementById("f_role").value = staff.role;
+      document.getElementById("f_active").checked = staff.active;
+    } else {
+      document.getElementById("modalTitle").textContent = "Add Staff";
+      document.getElementById("staffDbId").value = "";
+      document.getElementById("f_username").value = "";
+      document.getElementById("f_password").value = "";
+      document.getElementById("f_password").setAttribute("required", "");
+      document.getElementById("passwordHint").style.display = "none";
+      document.getElementById("f_fullName").value = "";
+      document.getElementById("f_role").value = "viewer";
+      document.getElementById("f_active").checked = true;
+    }
+
+    modal.classList.add("open");
+  }
+
+  function closeModal() {
+    modal.classList.remove("open");
+  }
+
+  document.getElementById("newStaffBtn").addEventListener("click", () => openModal(null));
+  document.getElementById("closeModal").addEventListener("click", closeModal);
+  document.getElementById("cancelBtn").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById("formError");
+    errorEl.style.display = "none";
+
+    const id = document.getElementById("staffDbId").value;
+    const password = document.getElementById("f_password").value;
+
+    if (!id && !password) {
+      errorEl.textContent = "Password is required for new accounts.";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    const body = {
+      username: document.getElementById("f_username").value.trim(),
+      fullName: document.getElementById("f_fullName").value.trim(),
+      role: document.getElementById("f_role").value,
+      active: document.getElementById("f_active").checked,
+    };
+    if (password) body.password = password;
+
+    try {
+      if (id) {
+        const updated = await adminFetch(`/api/admin/staff/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        });
+        currentStaff = currentStaff.map((s) => (s.id === updated.id ? updated : s));
+      } else {
+        const created = await adminFetch("/api/admin/staff", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        currentStaff.push(created);
+      }
+      closeModal();
+      renderTable();
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = "block";
+    }
+  });
+
+  /* ── Init: load /me and staff list in parallel ── */
+
+  (async () => {
+    try {
+      const [me, staff] = await Promise.all([
+        adminFetch("/api/admin/me"),
+        adminFetch("/api/admin/staff"),
+      ]);
+      myStaffId = me.id;
+      currentStaff = staff;
+      renderTable();
+    } catch (err) {
+      document.getElementById("staffBody").innerHTML =
+        `<tr class="empty-row"><td colspan="6">${err.message}</td></tr>`;
+    }
+  })();
+</script>
+</body>
+</html>

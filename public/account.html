@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your Account — Kelsworth</title>
+<meta name="description" content="Manage your Kelsworth account: orders, wishlist, addresses and more." />
+<meta name="robots" content="noindex, follow" />
+<meta property="og:site_name" content="Kelsworth" />
+<meta property="og:title" content="Your Account — Kelsworth" />
+<meta property="og:description" content="Manage your Kelsworth account: orders, wishlist, addresses and more." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="/images/og-banner.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Your Account — Kelsworth" />
+<meta name="twitter:description" content="Manage your Kelsworth account: orders, wishlist, addresses and more." />
+<meta name="twitter:image" content="/images/og-banner.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="site-header" id="site-header"></header>
+
+<div class="container" id="main-content" tabindex="-1" style="padding-top:20px">
+  <div class="breadcrumb"><a href="index.html">Home</a> / <span>Account</span></div>
+  <div id="accountContent">
+    <p style="font-family:var(--font-mono);font-size:12px;color:var(--ink-soft)">Loading…</p>
+  </div>
+</div>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/site.js"></script>
+<script>
+  mountChrome("account");
+  const mainContainer = document.getElementById("main-content");
+
+  const STATUS_LABELS = {
+    pending: "Pending", processing: "Processing", shipped: "Shipped",
+    delivered: "Delivered", cancelled: "Cancelled",
+  };
+  const TRASH_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>`;
+
+  let activeTab = ["orders", "wishlist", "recent", "addresses", "profile"].includes(new URLSearchParams(location.search).get("tab"))
+    ? new URLSearchParams(location.search).get("tab")
+    : "orders";
+  let customer = null;
+
+  /* ---------------------------- Auth forms ---------------------------- */
+
+  function authFormsHTML() {
+    return `
+      <div class="collection-head"><h1>Your Account</h1><p>Log in to see your order history, or create an account for faster checkout next time.</p></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px">
+        <div>
+          <h3 style="font-size:18px;margin-bottom:14px">Log In</h3>
+          <form id="loginForm" style="display:flex;flex-direction:column;gap:12px">
+            <div class="field"><label for="li_email">Email</label><input type="email" id="li_email" required /></div>
+            <div class="field"><label for="li_password">Password</label><input type="password" id="li_password" required /></div>
+            <p id="loginError" role="alert" style="display:none;color:var(--accent);font-size:12.5px"></p>
+            <button type="submit" class="btn full">Log In</button>
+          </form>
+        </div>
+        <div>
+          <h3 style="font-size:18px;margin-bottom:14px">Create Account</h3>
+          <form id="registerForm" style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:10px">
+              <div class="field" style="flex:1"><label for="r_fname">First Name</label><input type="text" id="r_fname" required /></div>
+              <div class="field" style="flex:1"><label for="r_lname">Last Name</label><input type="text" id="r_lname" required /></div>
+            </div>
+            <div class="field"><label for="r_email">Email</label><input type="email" id="r_email" required /></div>
+            <div class="field"><label for="r_password">Password (min. 8 characters)</label><input type="password" id="r_password" required minlength="8" /></div>
+            <p id="registerError" role="alert" style="display:none;color:var(--accent);font-size:12.5px"></p>
+            <button type="submit" class="btn outline full">Create Account</button>
+          </form>
+        </div>
+      </div>`;
+  }
+
+  function wireAuthForms() {
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("loginError");
+      errorEl.style.display = "none";
+      try {
+        await loginCustomer(document.getElementById("li_email").value, document.getElementById("li_password").value);
+        render();
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = "block";
+      }
+    });
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("registerError");
+      errorEl.style.display = "none";
+      try {
+        await registerCustomer({
+          firstName: document.getElementById("r_fname").value,
+          lastName: document.getElementById("r_lname").value,
+          email: document.getElementById("r_email").value,
+          password: document.getElementById("r_password").value,
+        });
+        render();
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = "block";
+      }
+    });
+  }
+
+  /* ---------------------------- Dashboard shell ---------------------------- */
+
+  const TABS = [
+    { key: "orders", label: "Orders" },
+    { key: "wishlist", label: "Wishlist" },
+    { key: "recent", label: "Recently Viewed" },
+    { key: "addresses", label: "Addresses" },
+    { key: "profile", label: "Profile" },
+  ];
+
+  function shellHTML() {
+    return `
+      <div class="collection-head" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px">
+        <div><h1>Your Account</h1><p>${customer.firstName} ${customer.lastName} · ${customer.email}</p></div>
+        <button class="btn outline" id="logoutBtn">Log Out</button>
+      </div>
+      <div class="account-shell">
+        <div class="account-nav" id="accountNav">
+          ${TABS.map((t) => `<button data-tab="${t.key}" class="${activeTab === t.key ? "active" : ""}">${t.label}</button>`).join("")}
+        </div>
+        <div id="tabPanel"><p class="account-empty">Loading…</p></div>
+      </div>`;
+  }
+
+  function productCardHTML(p, extra = "") {
+    const onSale = p.salePrice != null;
+    return `
+    <div class="product-card wishlist-card">
+      ${extra}
+      <a href="product.html?id=${p.id}">
+        <div class="thumb">
+          ${p.badge ? `<span class="badge ${onSale ? "sale" : ""}">${p.badge}</span>` : ""}
+          <img src="${p.image}" alt="${p.name}" loading="lazy" decoding="async" />
+        </div>
+        <div class="card-body">
+          <span class="cat">${p.category}</span>
+          <h3>${p.name}</h3>
+          ${ratingSnippetHTML(p)}
+          <div class="price-row">
+            ${onSale
+              ? `<span class="price was">${formatPKR(p.price)}</span><span class="price now">${formatPKR(p.salePrice)}</span>`
+              : `<span class="price">${formatPKR(p.price)}</span>`}
+          </div>
+        </div>
+      </a>
+    </div>`;
+  }
+
+  /* ---------------------------- Orders tab ---------------------------- */
+
+  async function renderOrdersTab() {
+    const panel = document.getElementById("tabPanel");
+    panel.innerHTML = `<div class="skeleton-line skeleton-block" style="height:90px;margin-bottom:12px"></div><div class="skeleton-line skeleton-block" style="height:90px"></div>`;
+    let orders = [];
+    try { orders = await fetchCustomerOrders(); } catch (e) {}
+    if (!orders.length) {
+      panel.innerHTML = `<p class="account-empty">No orders yet — <a href="collection.html" style="text-decoration:underline">start shopping</a>.</p>`;
+      return;
+    }
+    panel.innerHTML = orders.map((o) => `
+      <div class="order-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-family:var(--font-mono);font-size:12.5px">#${o.order_number}</span>
+          <span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;border:1px solid var(--ink);padding:4px 9px">${STATUS_LABELS[o.status] || o.status}</span>
+        </div>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 8px">${new Date(o.created_at).toLocaleDateString("en-PK", { dateStyle: "medium" })} · ${o.items.length} item${o.items.length === 1 ? "" : "s"}</p>
+        <p style="font-family:var(--font-mono);font-size:13px;margin:0">${formatPKR(o.total)}</p>
+        <div class="order-card-actions">
+          <button type="button" data-reorder="${o.id}">Reorder</button>
+          <a href="/api/customers/orders/${o.id}/invoice" target="_blank" rel="noopener">Download Invoice</a>
+        </div>
+      </div>`).join("");
+
+    panel.querySelectorAll("[data-reorder]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const order = orders.find((o) => o.id === Number(btn.dataset.reorder));
+        btn.disabled = true;
+        btn.textContent = "Adding…";
+        const allProducts = await fetchProducts();
+        const byDbId = Object.fromEntries(allProducts.map((p) => [p.dbId, p]));
+        let added = 0, skipped = 0;
+        order.items.forEach((item) => {
+          const product = byDbId[item.product_id];
+          if (product && product.sizes.includes(item.size) && !product.sizesOutOfStock.includes(item.size)) {
+            addToCart(product.id, item.size, item.qty);
+            added++;
+          } else {
+            skipped++;
+          }
+        });
+        if (added) {
+          window.location.href = "cart.html";
+        } else {
+          btn.disabled = false;
+          btn.textContent = "Reorder";
+          alert("None of the items from this order are available right now.");
+        }
+      });
+    });
+  }
+
+  /* ---------------------------- Wishlist tab ---------------------------- */
+
+  async function renderWishlistTab() {
+    const panel = document.getElementById("tabPanel");
+    panel.innerHTML = `<div class="product-grid">${skeletonCards(4)}</div>`;
+    const items = await fetchWishlist();
+    if (!items.length) {
+      panel.innerHTML = `<p class="account-empty">Nothing saved yet — tap the heart on any product to add it here.</p>`;
+      return;
+    }
+    panel.innerHTML = `<div class="product-grid">${items.map((p) => productCardHTML(p, `<button class="wishlist-remove" data-remove-wishlist="${p.id}" aria-label="Remove from wishlist">${TRASH_ICON}</button>`)).join("")}</div>`;
+    panel.querySelectorAll("[data-remove-wishlist]").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        await removeFromWishlist(btn.dataset.removeWishlist);
+        renderWishlistTab();
+      });
+    });
+  }
+
+  /* ---------------------------- Recently viewed tab ---------------------------- */
+
+  async function renderRecentTab() {
+    const panel = document.getElementById("tabPanel");
+    panel.innerHTML = `<div class="product-grid">${skeletonCards(4)}</div>`;
+    const items = await recentlyViewedProducts();
+    if (!items.length) {
+      panel.innerHTML = `<p class="account-empty">Products you view will show up here.</p>`;
+      return;
+    }
+    panel.innerHTML = `
+      <button type="button" id="clearRecentViewedBtn" style="font-family:var(--font-mono);font-size:11px;text-decoration:underline;background:none;border:none;cursor:pointer;color:var(--ink-soft);margin-bottom:16px">Clear history</button>
+      <div class="product-grid">${items.map((p) => productCardHTML(p)).join("")}</div>`;
+    document.getElementById("clearRecentViewedBtn").addEventListener("click", () => {
+      clearRecentlyViewed();
+      renderRecentTab();
+    });
+  }
+
+  /* ---------------------------- Addresses tab ---------------------------- */
+
+  function addressFormHTML(a) {
+    return `
+      <form id="addressForm" class="form-grid" style="border:1px solid var(--line);padding:18px;margin-bottom:16px">
+        <div class="field"><label>Label</label><input type="text" id="a_label" placeholder="Home, Office…" value="${a ? a.label : "Home"}" /></div>
+        <div class="field"><label>First Name</label><input type="text" id="a_fname" required value="${a ? a.firstName : customer.firstName}" /></div>
+        <div class="field"><label>Last Name</label><input type="text" id="a_lname" required value="${a ? a.lastName : customer.lastName}" /></div>
+        <div class="field"><label>Phone</label><input type="tel" id="a_phone" required value="${a ? a.phone : customer.phone || ""}" /></div>
+        <div class="field full"><label>Street Address</label><input type="text" id="a_address" required value="${a ? a.address : ""}" /></div>
+        <div class="field"><label>City</label><input type="text" id="a_city" required list="pkCityListAcc" value="${a ? a.city : ""}" /></div>
+        <div class="field"><label>Postal Code</label><input type="text" id="a_postal" value="${a ? a.postalCode : ""}" /></div>
+        <datalist id="pkCityListAcc">
+          <option value="Karachi"></option><option value="Lahore"></option><option value="Islamabad"></option>
+          <option value="Rawalpindi"></option><option value="Faisalabad"></option><option value="Multan"></option>
+          <option value="Peshawar"></option><option value="Quetta"></option><option value="Sialkot"></option>
+        </datalist>
+        <div class="checkbox-field full"><input type="checkbox" id="a_default" /><label for="a_default">Set as default address</label></div>
+        <div class="field full" style="flex-direction:row;gap:10px">
+          <button type="submit" class="btn">Save Address</button>
+          <button type="button" class="btn outline" id="cancelAddressForm">Cancel</button>
+        </div>
+      </form>`;
+  }
+
+  async function renderAddressesTab() {
+    const panel = document.getElementById("tabPanel");
+    const addresses = await fetchAddresses();
+    panel.innerHTML = `
+      <div class="address-picker">
+        ${addresses.map((a) => `
+          <div class="address-card">
+            <div>
+              <div class="ac-label">${a.label}${a.isDefault ? " · Default" : ""}</div>
+              <div class="ac-name">${a.firstName} ${a.lastName}</div>
+              <div class="ac-detail">${a.address}, ${a.city} ${a.postalCode || ""}</div>
+              <div class="ac-detail">${a.phone}</div>
+              <button type="button" data-delete-address="${a.id}" style="margin-top:8px;font-family:var(--font-mono);font-size:11px;text-decoration:underline;background:none;border:none;cursor:pointer;color:var(--ink-soft)">Remove</button>
+            </div>
+          </div>`).join("")}
+      </div>
+      <button class="btn outline" id="showAddAddressBtn" style="margin-top:8px">+ Add New Address</button>
+      <div id="addressFormMount" style="margin-top:16px"></div>`;
+
+    panel.querySelectorAll("[data-delete-address]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        await deleteAddress(btn.dataset.deleteAddress);
+        renderAddressesTab();
+      });
+    });
+    document.getElementById("showAddAddressBtn").addEventListener("click", () => {
+      document.getElementById("addressFormMount").innerHTML = addressFormHTML(null);
+      wireAddressForm();
+    });
+  }
+
+  function wireAddressForm() {
+    document.getElementById("cancelAddressForm").addEventListener("click", () => {
+      document.getElementById("addressFormMount").innerHTML = "";
+    });
+    document.getElementById("addressForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        await saveAddress({
+          label: document.getElementById("a_label").value,
+          firstName: document.getElementById("a_fname").value,
+          lastName: document.getElementById("a_lname").value,
+          phone: document.getElementById("a_phone").value,
+          address: document.getElementById("a_address").value,
+          city: document.getElementById("a_city").value,
+          postalCode: document.getElementById("a_postal").value,
+          isDefault: document.getElementById("a_default").checked,
+        });
+        renderAddressesTab();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
+  /* ---------------------------- Profile tab ---------------------------- */
+
+  async function fileToDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderProfileTab() {
+    const panel = document.getElementById("tabPanel");
+    panel.innerHTML = `
+      <div class="avatar-row">
+        ${customer.avatarUrl
+          ? `<img class="avatar-preview" src="${customer.avatarUrl}" alt="Profile picture" id="avatarPreview" />`
+          : `<div class="avatar-placeholder" id="avatarPreview">${customer.firstName[0]}${customer.lastName[0]}</div>`}
+        <div>
+          <input type="file" id="avatarInput" accept="image/*" style="display:none" />
+          <button type="button" class="btn outline" id="changeAvatarBtn" style="padding:8px 16px">Change Photo</button>
+        </div>
+      </div>
+
+      <form id="profileForm" class="form-grid" style="margin-bottom:36px">
+        <div class="field"><label>First Name</label><input type="text" id="p_fname" required value="${customer.firstName}" /></div>
+        <div class="field"><label>Last Name</label><input type="text" id="p_lname" required value="${customer.lastName}" /></div>
+        <div class="field full"><label>Phone</label><input type="tel" id="p_phone" value="${customer.phone || ""}" /></div>
+        <div class="field full" style="flex-direction:row"><button type="submit" class="btn">Save Profile</button></div>
+      </form>
+
+      <h3 style="font-size:16px;margin-bottom:14px">Notification Preferences</h3>
+      <form id="notifyForm" style="display:flex;flex-direction:column;gap:10px">
+        <div class="checkbox-field"><input type="checkbox" id="n_orders" ${customer.notifyOrderUpdates ? "checked" : ""} /><label for="n_orders">Order status updates</label></div>
+        <div class="checkbox-field"><input type="checkbox" id="n_promos" ${customer.notifyPromotions ? "checked" : ""} /><label for="n_promos">Promotions &amp; sales</label></div>
+        <div class="checkbox-field"><input type="checkbox" id="n_newsletter" ${customer.notifyNewsletter ? "checked" : ""} /><label for="n_newsletter">Newsletter</label></div>
+        <div><button type="submit" class="btn outline" style="padding:10px 20px;margin-top:6px">Save Preferences</button></div>
+      </form>
+      <p id="profileSaved" style="display:none;color:#3f7a44;font-size:12.5px;margin-top:14px">Saved.</p>`;
+
+    document.getElementById("changeAvatarBtn").addEventListener("click", () => document.getElementById("avatarInput").click());
+    document.getElementById("avatarInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const dataUrl = await fileToDataURL(file);
+      customer = await updateCustomerProfile({ avatarUrl: dataUrl });
+      renderProfileTab();
+    });
+
+    document.getElementById("profileForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      customer = await updateCustomerProfile({
+        firstName: document.getElementById("p_fname").value,
+        lastName: document.getElementById("p_lname").value,
+        phone: document.getElementById("p_phone").value,
+      });
+      flashSaved();
+    });
+
+    document.getElementById("notifyForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      customer = await updateCustomerProfile({
+        notifyOrderUpdates: document.getElementById("n_orders").checked,
+        notifyPromotions: document.getElementById("n_promos").checked,
+        notifyNewsletter: document.getElementById("n_newsletter").checked,
+      });
+      flashSaved();
+    });
+
+    function flashSaved() {
+      const p = document.getElementById("profileSaved");
+      p.style.display = "block";
+      setTimeout(() => (p.style.display = "none"), 2000);
+    }
+  }
+
+  /* ---------------------------- Tab routing ---------------------------- */
+
+  const TAB_RENDERERS = {
+    orders: renderOrdersTab,
+    wishlist: renderWishlistTab,
+    recent: renderRecentTab,
+    addresses: renderAddressesTab,
+    profile: renderProfileTab,
+  };
+
+  function renderTab() {
+    document.querySelectorAll("[data-tab]").forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === activeTab));
+    TAB_RENDERERS[activeTab]();
+  }
+
+  /* ---------------------------- Boot ---------------------------- */
+
+  async function render() {
+    const content = document.getElementById("accountContent");
+    customer = await fetchCustomerMe();
+
+    if (!customer) {
+      mainContainer.classList.add("account-narrow");
+      content.innerHTML = authFormsHTML();
+      wireAuthForms();
+      return;
+    }
+
+    mainContainer.classList.remove("account-narrow");
+    content.innerHTML = shellHTML();
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await logoutCustomer();
+      render();
+    });
+    document.querySelectorAll("[data-tab]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeTab = btn.dataset.tab;
+        renderTab();
+      });
+    });
+    renderTab();
+  }
+
+  render();
+</script>
+</body>
+</html>
