@@ -44,26 +44,64 @@ admin/                     The admin panel
 
 ## 1. What you need before starting
 - **Node.js** installed on your computer (v18 or newer) — from nodejs.org
-- A place to run this and a database. Recommended: **Railway** — free trial
-  credit, easiest setup, no server admin required.
+- A place to run this and a database. Recommended, and genuinely free to
+  start: **Render** (web service) + **Neon** (Postgres) — see below.
 
-## 2. Recommended hosting: Railway
-1. Go to **railway.app**, sign up, click **New Project**.
-2. Choose **Deploy from GitHub repo** — push this folder to a GitHub
-   repository first if you haven't already.
-3. In the same project, click **+ New** → **Database** → **Add PostgreSQL**.
-   Railway automatically creates `DATABASE_URL` for your app.
-4. Click your app service → **Variables** tab → add:
+## 2. Recommended hosting: Render + Neon (free)
+Render's free web service tier and Neon's free Postgres tier are both
+enough to run this store — no card required to start. They're two separate
+signups (Render doesn't keep a no-cost Postgres option anymore), but it
+only takes a few minutes total.
+
+**2a. Database — Neon:**
+1. Go to **neon.tech**, sign up, create a project.
+2. Copy the **connection string** it gives you (starts with
+   `postgresql://...`) — that's your `DATABASE_URL`.
+
+**2b. App — Render:**
+1. Push this folder to a GitHub repository if you haven't already.
+2. Go to **render.com**, sign up, click **New +** → **Web Service**, and
+   connect that repo. Render reads `render.yaml` in this folder
+   automatically and pre-fills the build/start commands and health check —
+   you can also set these up manually if you'd rather not use the blueprint.
+3. Under **Environment**, add:
+   - `DATABASE_URL` — the Neon connection string from step 2a
    - `JWT_SECRET` — any long random string (generate one locally with
      `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`)
    - `ADMIN_INITIAL_USERNAME` / `ADMIN_INITIAL_PASSWORD`
    - `NODE_ENV` — `production`
-   - Optional email variables — see section 6 below
-5. **Settings → Deploy**: set **Pre-Deploy Command** to `npm run seed` (this
-   is safe to leave in place permanently — see "Updating an existing store"
-   below for why).
-6. **Settings → Networking** → **Generate Domain** for a free
-   `*.up.railway.app` URL, or connect your own domain there.
+   - Optional email/payment gateway variables — see the relevant sections
+     below
+4. Deploy. Render gives you a free `*.onrender.com` URL, or connect your
+   own domain under **Settings → Custom Domains**.
+5. The **first deploy** needs the database tables created. Render's free
+   tier doesn't include a separate pre-deploy step, so either:
+   - run `npm run seed` once yourself against the Neon `DATABASE_URL` from
+     your own computer (`DATABASE_URL=<paste> npm run seed`), before or
+     after the first deploy, **or**
+   - temporarily change Render's **Start Command** to
+     `npm run seed && npm start` for the first deploy, then change it back
+     to `npm start` afterwards (see section 4 below for why you don't need
+     to keep it there).
+
+**Worth knowing about the free tiers:**
+- Render's free web service **spins down after 15 minutes with no
+  traffic** and takes ~30–50 seconds to wake back up on the next request —
+  fine for a low-traffic store, but the first visitor after a quiet spell
+  waits a bit. The background scheduler in `server.js` (abandoned-cart
+  reminders, order/payment timeouts) only runs while the service is awake,
+  so those checks effectively pause during sleep and resume next time
+  someone hits the site — not a correctness problem, just a delay.
+- Neon's free tier is a genuinely persistent database (no "deleted after
+  90 days" catch), with generous storage for a store this size.
+- Both are worth checking at signup time — free-tier terms on hosting
+  platforms change fairly often.
+
+**Alternative:** Fly.io is a solid option too if you'd rather have one
+account for both app and database (it can host Postgres too), though its
+free allowance is smaller and it asks for a card up front. Railway also
+works well if you'd rather pay a few dollars a month for a no-sleep,
+single-dashboard setup.
 
 ## 3. Running it on your own computer first (recommended before deploying)
 1. `npm install`
@@ -84,10 +122,11 @@ only fills in what's missing (like backfilling starter stock for products
 that existed before per-size stock tracking did). Re-running never deletes
 or overwrites data you already have.
 
-**Practical takeaway:** after pulling any future update from me, just make
-sure your deploy runs `npm run seed` before `npm start` (Railway's
-Pre-Deploy Command setting from step 2.5 handles this automatically on
-every deploy — you don't need to toggle it on and off anymore).
+**Practical takeaway:** after pulling any future update from me, run
+`npm run seed` once against your live `DATABASE_URL` (from your own
+computer, same as step 2b) before or after redeploying. If you're on a host
+with a pre-deploy/release-command setting (Railway, for instance), pointing
+that at `npm run seed` makes this automatic on every deploy.
 
 ## 5. Logging into the admin panel
 `/admin/login.html` — log in with your `ADMIN_INITIAL_USERNAME` /

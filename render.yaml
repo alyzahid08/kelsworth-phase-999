@@ -1,0 +1,29 @@
+# Render blueprint — lets Render auto-configure this service when you
+# connect the repo (New + -> Blueprint, or it's picked up automatically
+# when creating a Web Service from this repo). See README.md section 2 for
+# the full walkthrough, including the Neon database setup this pairs with.
+#
+# Secrets (DATABASE_URL, JWT_SECRET, ADMIN_INITIAL_USERNAME/PASSWORD, any
+# email or payment gateway variables) are intentionally left for you to
+# fill in via the Render dashboard rather than committed here — that's what
+# `sync: false` below means.
+
+services:
+  - type: web
+    name: kelsworth-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_INITIAL_USERNAME
+        sync: false
+      - key: ADMIN_INITIAL_PASSWORD
+        sync: false
