@@ -108,13 +108,12 @@ router.get("/", async (req, res) => {
 });
 
 const CATEGORY_LABELS = {
-  jeans: "Jeans",
-  jackets: "Jackets",
-  shorts: "Shorts",
-  polos: "Polos",
-  tees: "Tees",
-  "drop-shoulder-shirts": "Drop Shoulder Shirts",
-  "full-sleeve-shirts": "Full Sleeve Shirts",
+  cotton: "Cotton Unstitched",
+  "wash-n-wear": "Wash & Wear",
+  karandi: "Karandi",
+  khaddar: "Khaddar",
+  linen: "Linen",
+  blended: "Blended Fabric",
   wallets: "Wallets",
   caps: "Caps",
   watches: "Watches",

@@ -4,17 +4,17 @@
 <meta charset="UTF-8" />
 <link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Men's Denim — Kelsworth</title>
-<meta name="description" content="Shop men's denim jeans, jackets, shorts, wallets, watches, caps and bracelets at Kelsworth. Filter by fit, size, price and colour." />
+<title>Men's Unstitched Fabric — Kelsworth</title>
+<meta name="description" content="Shop men's unstitched fabric — cotton, wash &amp; wear, karandi, khaddar, linen, wallets, watches, caps and bracelets at Kelsworth. Filter by fabric, price and colour." />
 <meta property="og:site_name" content="Kelsworth" />
 <link rel="canonical" href="https://www.kelsworth.com/collection.html" />
-<meta property="og:title" content="Men's Denim — Kelsworth" />
-<meta property="og:description" content="Shop men's denim jeans, jackets, shorts, wallets, watches, caps and bracelets at Kelsworth. Filter by fit, size, price and colour." />
+<meta property="og:title" content="Men's Unstitched Fabric — Kelsworth" />
+<meta property="og:description" content="Shop men's unstitched fabric — cotton, wash &amp; wear, karandi, khaddar, linen, wallets, watches, caps and bracelets at Kelsworth. Filter by fabric, price and colour." />
 <meta property="og:type" content="website" />
 <meta property="og:image" content="/images/og-banner.svg" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Men's Denim — Kelsworth" />
-<meta name="twitter:description" content="Shop men's denim jeans, jackets, shorts, wallets, watches, caps and bracelets at Kelsworth. Filter by fit, size, price and colour." />
+<meta name="twitter:title" content="Men's Unstitched Fabric — Kelsworth" />
+<meta name="twitter:description" content="Shop men's unstitched fabric — cotton, wash &amp; wear, karandi, khaddar, linen, wallets, watches, caps and bracelets at Kelsworth. Filter by fabric, price and colour." />
 <meta name="twitter:image" content="/images/og-banner.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
   "@type": "BreadcrumbList",
   "itemListElement": [
     { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.kelsworth.com/index.html" },
-    { "@type": "ListItem", "position": 2, "name": "Men's Denim", "item": "https://www.kelsworth.com/collection.html" }
+    { "@type": "ListItem", "position": 2, "name": "Men's Unstitched Fabric", "item": "https://www.kelsworth.com/collection.html" }
   ]
 }
 </script>
@@ -35,11 +35,11 @@
 <header class="site-header" id="site-header"></header>
 
 <div id="main-content" tabindex="-1" class="container">
-  <div class="breadcrumb"><a href="index.html">Home</a> / <span id="crumbLabel">Men's Denim</span></div>
+  <div class="breadcrumb"><a href="index.html">Home</a> / <span id="crumbLabel">Men's Unstitched Fabric</span></div>
 
   <div class="collection-head">
-    <h1 id="pageTitle">Men's Denim</h1>
-    <p id="pageDesc">Raw indigo to overdyed black — jeans, jackets, shorts and accessories cut for daily wear. Every piece reinforced at the stress points, finished to last.</p>
+    <h1 id="pageTitle">Men's Unstitched Fabric</h1>
+    <p id="pageDesc">Cotton to karandi, wash &amp; wear to linen — unstitched suit lengths and accessories cut for daily wear. Every fabric chosen to hold up after the tailor is done with it.</p>
   </div>
 
   <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
@@ -60,7 +60,7 @@
       </details>
 
       <details class="filter-group" open>
-        <summary>Fit</summary>
+        <summary>Piece</summary>
         <div class="filter-options" id="fitFilters"></div>
       </details>
 
@@ -154,18 +154,16 @@
   };
 
   const CATEGORY_COPY = {
-    jeans: { title: "Men's Jeans", desc: "Slim, straight, relaxed and skinny fits — raw indigo to overdyed black." },
-    trousers: { title: "Trouser", desc: "Relaxed, tailored trousers built for daily wear, cut to last." },
-    sportswear: { title: "Sports Wear", desc: "Track jackets, joggers and training essentials for everyday movement." },
-    polos: { title: "Polos", desc: "Clean-collar polos in breathable cotton pique, built for everyday wear." },
-    tees: { title: "Tees", desc: "Everyday tees and oversized fits in heavyweight cotton." },
-    "drop-shoulder-shirts": { title: "Drop Shoulder Shirts", desc: "Relaxed, boxy drop-shoulder shirts and tees for an easy, oversized fit." },
-    "full-sleeve-shirts": { title: "Full Sleeve Casual Shirts", desc: "Long-sleeve casual shirts you can dress up or wear open over a tee." },
+    cotton: { title: "Cotton Unstitched", desc: "Everyday cotton suit lengths — breathable, colorfast, and easy for any tailor to work with." },
+    "wash-n-wear": { title: "Wash & Wear", desc: "Wrinkle-resistant unstitched lengths that go from wash to wardrobe with barely a crease." },
+    karandi: { title: "Karandi", desc: "Brushed, warm karandi lengths built for the coldest months." },
+    khaddar: { title: "Khaddar", desc: "Handwoven-look khaddar lengths — coarse, breathable and built to last a winter." },
+    linen: { title: "Linen", desc: "Premium linen lengths, light and breathable for the hottest months." },
+    blended: { title: "Blended Fabric", desc: "Practical cotton-poly blended lengths — easy care, dependable everyday fabric." },
     wallets: { title: "Wallets", desc: "Leather and canvas wallets built for daily carry — bifolds, card holders and trifolds." },
     watches: { title: "Watches", desc: "Chronographs, minimal dials and sport digitals — Japanese quartz, built to last." },
     caps: { title: "Caps", desc: "Baseball caps, dad caps and snapbacks in washed cotton and raw denim." },
     bracelets: { title: "Bracelets", desc: "Leather, beaded and paracord bracelets for men. Stack them or wear solo." },
-    belts: { title: "Belts", desc: "Leather belts with brass and steel buckles, built for daily wear." },
   };
   if (state.search) {
     document.getElementById("pageTitle").textContent = `Search: "${state.search}"`;
@@ -180,7 +178,7 @@
     document.title = `${copy.title} — Kelsworth`;
   } else if (state.saleOnly) {
     document.getElementById("pageTitle").textContent = "Sale";
-    document.getElementById("pageDesc").textContent = "Reduced denim while stock lasts. Final sale on marked-down items.";
+    document.getElementById("pageDesc").textContent = "Reduced fabric while stock lasts. Final sale on marked-down items.";
     document.getElementById("crumbLabel").textContent = "Sale";
     document.title = "Sale — Kelsworth";
   }

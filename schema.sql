@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS products (
   id            SERIAL PRIMARY KEY,
   slug          TEXT UNIQUE NOT NULL,
   name          TEXT NOT NULL,
-  category      TEXT NOT NULL,       -- jeans | jackets | shorts | polos | tees | drop-shoulder-shirts | full-sleeve-shirts | wallets | watches | caps | bracelets
-  fit           TEXT NOT NULL,       -- slim | straight | regular | relaxed | skinny
+  category      TEXT NOT NULL,       -- cotton | wash-n-wear | karandi | khaddar | linen | blended | wallets | watches | caps | bracelets
+  fit           TEXT NOT NULL,       -- 2-piece | 3-piece | regular (accessories)
   color         TEXT NOT NULL,
   price         INTEGER NOT NULL,    -- PKR, whole rupees
   sale_price    INTEGER,             -- null when not on sale

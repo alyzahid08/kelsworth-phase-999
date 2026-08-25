@@ -12,9 +12,9 @@ const CLOSE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 
 const NAV_LINKS = [
   { label: "Home", href: "index.html", key: "home" },
-  { label: "Men's Denim", href: "collection.html", key: "collection" },
-  { label: "Trouser", href: "collection.html?category=trousers", key: "trousers" },
-  { label: "Shirts", href: "collection.html?category=polos", key: "shirts" },
+  { label: "Men's Unstitched", href: "collection.html", key: "collection" },
+  { label: "Cotton", href: "collection.html?category=cotton", key: "cotton" },
+  { label: "Wash & Wear", href: "collection.html?category=wash-n-wear", key: "wash-n-wear" },
   { label: "Sale", href: "collection.html?sale=1", key: "sale" },
 ];
 
@@ -135,19 +135,19 @@ function footerHTML() {
   <div class="footer-grid">
     <div class="footer-col">
       <h4>Kelsworth</h4>
-      <p>Denim built for wear, not display. Designed and finished for the way you actually move through a day.</p>
+      <p>Unstitched fabric built for wear, not display. Cut, dyed, and finished for the way it holds up after the tailor's done with it.</p>
       <div class="social-row">${socialRowHTML()}</div>
     </div>
     <div class="footer-col">
       <h4>Shop</h4>
       <ul>
-        <li><a href="collection.html">Men's Denim</a></li>
-        <li><a href="collection.html?category=trousers">Trouser</a></li>
-        <li><a href="collection.html?category=sportswear">Sports Wear</a></li>
-        <li><a href="collection.html?category=polos">Polos</a></li>
-        <li><a href="collection.html?category=tees">Tees</a></li>
-        <li><a href="collection.html?category=drop-shoulder-shirts">Drop Shoulder Shirts</a></li>
-        <li><a href="collection.html?category=full-sleeve-shirts">Full Sleeve Shirts</a></li>
+        <li><a href="collection.html">Men's Unstitched</a></li>
+        <li><a href="collection.html?category=cotton">Cotton Unstitched</a></li>
+        <li><a href="collection.html?category=wash-n-wear">Wash &amp; Wear</a></li>
+        <li><a href="collection.html?category=karandi">Karandi</a></li>
+        <li><a href="collection.html?category=khaddar">Khaddar</a></li>
+        <li><a href="collection.html?category=linen">Linen</a></li>
+        <li><a href="collection.html?category=blended">Blended Fabric</a></li>
         <li><a href="collection.html?sale=1">Sale</a></li>
       </ul>
     </div>

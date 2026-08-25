@@ -1,0 +1,22 @@
+<svg viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="520" fill="#EEEBE3"/>
+  <g stroke="#2B3A55" stroke-width="2">
+    <path d="M80,140 L320,140 L320,210 L80,210 Z" fill="#7FA6C9"/>
+    <path d="M80,220 L320,220 L320,290 L80,290 Z" fill="#7FA6C9" opacity="0.92"/>
+    <path d="M80,300 L320,300 L320,370 L80,370 Z" fill="#7FA6C9" opacity="0.84"/>
+    <path d="M80,380 L320,380 L320,430 L80,430 Z" fill="#7FA6C9" opacity="0.76"/>
+  </g>
+  <g fill="none" stroke="#F4F1E8" stroke-width="2.5" style="stroke-dasharray:6,5" opacity="0.85">
+    <path d="M80,175 L320,175"/>
+    <path d="M80,255 L320,255"/>
+    <path d="M80,335 L320,335"/>
+    <path d="M80,405 L320,405"/>
+  </g>
+  <g stroke="#2B3A55" stroke-width="2" fill="none">
+    <path d="M60,120 Q80,100 100,120 L100,440 Q80,460 60,440 Z" fill="#7FA6C9"/>
+  </g>
+  <g fill="#F4F1E8" opacity="0.9">
+    <rect x="150" y="90" width="100" height="34" rx="4" stroke="#2B3A55" stroke-width="2"/>
+  </g>
+  <text x="200" y="113" font-family="monospace" font-size="14" fill="#2B3A55" text-anchor="middle">UNSTITCHED</text>
+</svg>
