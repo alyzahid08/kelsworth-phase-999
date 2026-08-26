@@ -1,8 +1,14 @@
-# Kelsworth — Full Store (Backend + Admin Panel)
+# AL-QUTUZ — Full Store (Backend + Admin Panel)
 
 This is the complete, order-taking version of the site: a Node.js backend
 with a real database, sitting behind the storefront — plus an admin panel
 to manage products, stock, orders, and promo codes.
+
+> Note: the npm package name (`kelsworth-backend`) and the Render service
+> name in `render.yaml` were intentionally left unchanged during the
+> AL-QUTUZ rebrand — renaming either would change deploy URLs/slugs for an
+> already-provisioned service. Rename them only if you're setting up a
+> fresh deployment.
 
 ```
 server.js               App entry point

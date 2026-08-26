@@ -1,4 +1,4 @@
-/* Kelsworth — API client
+/* AL-QUTUZ — API client
    Talks to the Express backend instead of using a static product array. */
 
 let _productsCache = null;

@@ -427,7 +427,7 @@ const DEMO_PRODUCTS = [
     image: "/images/dad-cap-stone.svg",
     badge: null,
     description:
-      "An unstructured dad cap in a muted stone wash. Low profile, embroidered Kelsworth logo at the front. Your everyday grab-and-go.",
+      "An unstructured dad cap in a muted stone wash. Low profile, embroidered AL-QUTUZ logo at the front. Your everyday grab-and-go.",
     fabric: "100% cotton canvas",
     care: "Hand wash cold. Air dry flat.",
     material: "Cotton Canvas",

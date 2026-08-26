@@ -1,4 +1,4 @@
--- Kelsworth — database schema (PostgreSQL)
+-- AL-QUTUZ — database schema (PostgreSQL)
 -- Run automatically by `npm run seed` — you don't need to run this by hand.
 -- Safe to re-run any time: every statement uses IF NOT EXISTS, so re-running
 -- this after a code update will only add what's missing, never touch existing data.

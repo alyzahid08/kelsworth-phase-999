@@ -82,7 +82,7 @@ const publicStaticOptions = {
 };
 
 // ---- sitemap.xml ----
-const SITE_ORIGIN = process.env.SITE_ORIGIN || "https://www.kelsworth.com";
+const SITE_ORIGIN = process.env.SITE_ORIGIN || "https://www.alqutuz.com";
 const STATIC_PAGES = [
   "", "collection.html", "about.html", "contact.html", "faq.html",
   "shipping.html", "refund.html", "privacy.html", "track.html",
@@ -115,7 +115,7 @@ app.use("/api", (req, res) => res.status(404).json({ error: "Not found" }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Kelsworth server running on port ${PORT}`);
+  console.log(`AL-QUTUZ server running on port ${PORT}`);
 
   // ---- Abandoned Cart Reminder Scheduler ----
   // Runs every 30 minutes to check for abandoned carts and send reminders.

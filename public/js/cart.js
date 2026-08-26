@@ -1,4 +1,4 @@
-/* Kelsworth — cart engine
+/* AL-QUTUZ — cart engine
    The cart itself lives in localStorage (so it survives across pages and
    reloads without needing a login), but product details/prices are always
    looked up fresh from the API so a price change on the backend is reflected

@@ -1,4 +1,4 @@
-/* Kelsworth — shared chrome
+/* AL-QUTUZ — shared chrome
    Injects the header and footer into every page from one place, so nav
    links / copy only need to change here. */
 
@@ -10,20 +10,27 @@ const HOME_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const MENU_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`;
 const CLOSE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 5l14 14M19 5 5 19"/></svg>`;
 
+// Fabric-family groupings behind the primary nav — the storefront speaks in
+// "Wash & Wear" / "Cotton" / "Accessories", the database still speaks in the
+// original fine-grained categories. Grouping happens via a comma-separated
+// ?category= list that collection.html already knows how to split.
+const WASH_N_WEAR_CATEGORIES = ["wash-n-wear", "karandi", "khaddar", "linen", "blended"];
+const ACCESSORY_CATEGORIES = ["caps", "wallets", "watches"];
+
 const NAV_LINKS = [
-  { label: "Home", href: "index.html", key: "home" },
-  { label: "Men's Unstitched", href: "collection.html", key: "collection" },
+  { label: "Wash & Wear", href: `collection.html?category=${WASH_N_WEAR_CATEGORIES.join(",")}`, key: "wash-n-wear" },
   { label: "Cotton", href: "collection.html?category=cotton", key: "cotton" },
-  { label: "Wash & Wear", href: "collection.html?category=wash-n-wear", key: "wash-n-wear" },
-  { label: "Sale", href: "collection.html?sale=1", key: "sale" },
+  { label: "Accessories", href: `collection.html?category=${ACCESSORY_CATEGORIES.join(",")}`, key: "accessories" },
+  { label: "Collections", href: "collection.html", key: "collection" },
+  { label: "About", href: "about.html", key: "about" },
 ];
 
 // Update these with the store's real handles/URLs — the icons link out as
 // soon as they're filled in, and any left as "#" simply don't render.
 const SOCIAL_LINKS = {
-  instagram: "https://instagram.com/kelsworth",
-  facebook: "https://facebook.com/kelsworth",
-  tiktok: "https://tiktok.com/@kelsworth",
+  instagram: "https://instagram.com/alqutuz",
+  facebook: "https://facebook.com/alqutuz",
+  tiktok: "https://tiktok.com/@alqutuz",
   whatsapp: "https://wa.me/923000000000",
 };
 
@@ -39,7 +46,7 @@ function socialRowHTML() {
     .filter(([, url]) => url && url !== "#")
     .map(
       ([key, url]) =>
-        `<a href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Kelsworth on ${key}">${SOCIAL_ICONS[key]}</a>`
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" aria-label="AL-QUTUZ on ${key}">${SOCIAL_ICONS[key]}</a>`
     )
     .join("");
 }
@@ -49,9 +56,12 @@ function headerHTML(active) {
     (l) => `<a href="${l.href}" class="${l.key === active ? "active" : ""}">${l.label}</a>`
   ).join("");
   return `
-  <div class="announce-bar">Free shipping across Pakistan on orders over Rs. 5,000 — Cash on Delivery available</div>
+  <div class="announce-bar">Free delivery across Pakistan on orders over Rs. 5,000 — Cash on Delivery available</div>
   <div class="header-row">
-    <a href="index.html" class="logo"><img src="images/logo-wordmark.svg" alt="Kelsworth" class="logo-img" /></a>
+    <a href="index.html" class="logo brand-lockup" aria-label="AL-QUTUZ — القطز">
+      <img src="images/brand/logo-alqutuz.png" alt="AL-QUTUZ" class="brand-crest" />
+      <span class="brand-wordmark">AL-QUTUZ</span>
+    </a>
     <nav class="main-nav">${links}</nav>
     <div class="header-actions">
       <div class="search-wrap" id="searchWrap">
@@ -76,7 +86,10 @@ function mobileNavHTML(active) {
   ).join("");
   return `
   <div class="mobile-nav-head">
-    <span class="logo"><img src="images/logo-wordmark.svg" alt="Kelsworth" class="logo-img mobile-nav-logo-img" /></span>
+    <span class="logo brand-lockup" aria-label="AL-QUTUZ — القطز">
+      <img src="images/brand/logo-alqutuz.png" alt="AL-QUTUZ" class="brand-crest" />
+      <span class="brand-wordmark">AL-QUTUZ</span>
+    </span>
     <button class="nav-toggle" id="mobileNavClose" aria-label="Close menu" type="button">${CLOSE_ICON}</button>
   </div>
   <nav>${links}<a href="account.html">Account</a><a href="track.html">Track Order</a></nav>
@@ -133,21 +146,19 @@ function footerHTML() {
   </div>
   ${trustBadgesHTML()}
   <div class="footer-grid">
-    <div class="footer-col">
-      <h4>Kelsworth</h4>
-      <p>Unstitched fabric built for wear, not display. Cut, dyed, and finished for the way it holds up after the tailor's done with it.</p>
+    <div class="footer-col footer-brand-col">
+      <h4 class="footer-brand-name">AL-QUTUZ <span class="footer-brand-urdu">القطز</span></h4>
+      <p class="footer-brand-tagline" dir="rtl">اپنی شان، اپنا انداز</p>
+      <p>A premium men's fabric house — Wash &amp; Wear and Cotton unstitched lengths, with a curated edit of caps, wallets and watches.</p>
       <div class="social-row">${socialRowHTML()}</div>
     </div>
     <div class="footer-col">
       <h4>Shop</h4>
       <ul>
-        <li><a href="collection.html">Men's Unstitched</a></li>
-        <li><a href="collection.html?category=cotton">Cotton Unstitched</a></li>
-        <li><a href="collection.html?category=wash-n-wear">Wash &amp; Wear</a></li>
-        <li><a href="collection.html?category=karandi">Karandi</a></li>
-        <li><a href="collection.html?category=khaddar">Khaddar</a></li>
-        <li><a href="collection.html?category=linen">Linen</a></li>
-        <li><a href="collection.html?category=blended">Blended Fabric</a></li>
+        <li><a href="collection.html?category=${WASH_N_WEAR_CATEGORIES.join(",")}">Wash &amp; Wear</a></li>
+        <li><a href="collection.html?category=cotton">Cotton</a></li>
+        <li><a href="collection.html?category=${ACCESSORY_CATEGORIES.join(",")}">Accessories</a></li>
+        <li><a href="collection.html">All Collections</a></li>
         <li><a href="collection.html?sale=1">Sale</a></li>
       </ul>
     </div>
@@ -165,7 +176,7 @@ function footerHTML() {
     <div class="footer-col">
       <h4>Company</h4>
       <ul>
-        <li><a href="about.html">About Kelsworth</a></li>
+        <li><a href="about.html">About AL-QUTUZ</a></li>
         <li><a href="contact.html">Contact</a></li>
         <li><a href="privacy.html">Privacy Policy</a></li>
         <li><a href="refund.html">Refund Policy</a></li>
@@ -173,7 +184,7 @@ function footerHTML() {
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© ${new Date().getFullYear()} Kelsworth. All rights reserved.</span>
+    <span>© ${new Date().getFullYear()} AL-QUTUZ. All rights reserved.</span>
     <span class="payment-note">Payment: Cash on Delivery</span>
     <span>Karachi, Pakistan</span>
   </div>`;

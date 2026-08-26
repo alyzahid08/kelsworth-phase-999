@@ -236,7 +236,7 @@ router.post("/", attachCustomerIfPresent, async (req, res) => {
 
     if (order.confirmation_status === "pending" && order.confirmation_token) {
       // COD order — ask the customer to confirm on WhatsApp before it ships.
-      const confirmUrl = `${(process.env.SITE_ORIGIN || "https://www.kelsworth.com").replace(/\/$/, "")}/confirm-order.html?token=${order.confirmation_token}`;
+      const confirmUrl = `${(process.env.SITE_ORIGIN || "https://www.alqutuz.com").replace(/\/$/, "")}/confirm-order.html?token=${order.confirmation_token}`;
       sendOrderConfirmationRequest(order, confirmUrl);
     } else if (order.payment_status === "paid") {
       // Already paid at creation time (Stripe confirms card client-side before the order is submitted).
@@ -359,7 +359,7 @@ router.get("/:id/invoice", async (req, res) => {
     res.set("Content-Type", "application/pdf");
     res.set(
       "Content-Disposition",
-      `attachment; filename="Kelsworth-Invoice-${order.order_number}.pdf"`
+      `attachment; filename="AL-QUTUZ-Invoice-${order.order_number}.pdf"`
     );
     res.send(pdfBuffer);
   } catch (err) {

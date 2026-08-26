@@ -1,4 +1,4 @@
-/* Kelsworth — admin panel shared chrome + fetch wrapper */
+/* AL-QUTUZ — admin panel shared chrome + fetch wrapper */
 
 async function adminFetch(url, options = {}) {
   const res = await fetch(url, {
@@ -42,7 +42,7 @@ function sidebarHTML(active) {
   links += `\n    <a href="/" target="_blank">View Store ↗</a>`;
 
   return `
-  <a href="dashboard.html" class="logo" style="display:block"><img src="/images/logo-wordmark-light.svg" alt="Kelsworth" style="height:20px" /></a>
+  <a href="dashboard.html" class="logo" style="display:block"><img src="/images/logo-wordmark-light.svg" alt="AL-QUTUZ" style="height:20px" /></a>
   <nav class="admin-nav">${links}</nav>
   <div class="spacer"></div>
   <button class="logout-btn" id="logoutBtn">Log Out</button>`;

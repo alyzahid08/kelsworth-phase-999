@@ -138,7 +138,7 @@ router.post("/webhook/stripe", express.json({ type: 'application/json' }), async
 // to the friendly result page, while still returning HTTP 200 to the
 // gateway's own POST (some gateways treat non-200 as "retry the callback").
 function bounceToResultPage(res, orderNumber, status) {
-  const origin = (process.env.SITE_ORIGIN || "https://www.kelsworth.com").replace(/\/$/, "");
+  const origin = (process.env.SITE_ORIGIN || "https://www.alqutuz.com").replace(/\/$/, "");
   const url = `${origin}/payment-return.html?order=${encodeURIComponent(orderNumber || "")}&status=${status}`;
   res.status(200).send(`<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${url}"></head><body>Redirecting… <a href="${url}">Click here if you are not redirected.</a></body></html>`);
 }

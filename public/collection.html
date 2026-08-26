@@ -4,28 +4,28 @@
 <meta charset="UTF-8" />
 <link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Men's Unstitched Fabric — Kelsworth</title>
-<meta name="description" content="Shop men's unstitched fabric — cotton, wash &amp; wear, karandi, khaddar, linen, wallets, watches, caps and bracelets at Kelsworth. Filter by fabric, price and colour." />
-<meta property="og:site_name" content="Kelsworth" />
-<link rel="canonical" href="https://www.kelsworth.com/collection.html" />
-<meta property="og:title" content="Men's Unstitched Fabric — Kelsworth" />
-<meta property="og:description" content="Shop men's unstitched fabric — cotton, wash &amp; wear, karandi, khaddar, linen, wallets, watches, caps and bracelets at Kelsworth. Filter by fabric, price and colour." />
+<title>Wash & Wear, Cotton & Accessories — AL-QUTUZ</title>
+<meta name="description" content="Shop men's unstitched Wash &amp; Wear and Cotton fabrics, plus curated caps, wallets and watches at AL-QUTUZ. Filter by fabric, price and colour." />
+<meta property="og:site_name" content="AL-QUTUZ" />
+<link rel="canonical" href="https://www.alqutuz.com/collection.html" />
+<meta property="og:title" content="Wash & Wear, Cotton & Accessories — AL-QUTUZ" />
+<meta property="og:description" content="Shop men's unstitched Wash &amp; Wear and Cotton fabrics, plus curated caps, wallets and watches at AL-QUTUZ. Filter by fabric, price and colour." />
 <meta property="og:type" content="website" />
 <meta property="og:image" content="/images/og-banner.svg" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Men's Unstitched Fabric — Kelsworth" />
-<meta name="twitter:description" content="Shop men's unstitched fabric — cotton, wash &amp; wear, karandi, khaddar, linen, wallets, watches, caps and bracelets at Kelsworth. Filter by fabric, price and colour." />
+<meta name="twitter:title" content="Wash & Wear, Cotton & Accessories — AL-QUTUZ" />
+<meta name="twitter:description" content="Shop men's unstitched Wash &amp; Wear and Cotton fabrics, plus curated caps, wallets and watches at AL-QUTUZ. Filter by fabric, price and colour." />
 <meta name="twitter:image" content="/images/og-banner.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" />
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.kelsworth.com/index.html" },
-    { "@type": "ListItem", "position": 2, "name": "Men's Unstitched Fabric", "item": "https://www.kelsworth.com/collection.html" }
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.alqutuz.com/index.html" },
+    { "@type": "ListItem", "position": 2, "name": "Wash & Wear, Cotton & Accessories", "item": "https://www.alqutuz.com/collection.html" }
   ]
 }
 </script>
@@ -35,11 +35,11 @@
 <header class="site-header" id="site-header"></header>
 
 <div id="main-content" tabindex="-1" class="container">
-  <div class="breadcrumb"><a href="index.html">Home</a> / <span id="crumbLabel">Men's Unstitched Fabric</span></div>
+  <div class="breadcrumb"><a href="index.html">Home</a> / <span id="crumbLabel">Wash & Wear, Cotton & Accessories</span></div>
 
   <div class="collection-head">
-    <h1 id="pageTitle">Men's Unstitched Fabric</h1>
-    <p id="pageDesc">Cotton to karandi, wash &amp; wear to linen — unstitched suit lengths and accessories cut for daily wear. Every fabric chosen to hold up after the tailor is done with it.</p>
+    <h1 id="pageTitle">Wash & Wear, Cotton &amp; Accessories</h1>
+    <p id="pageDesc">Premium unstitched fabrics for everyday distinction — Wash &amp; Wear, Cotton, and a curated edit of caps, wallets and watches.</p>
   </div>
 
   <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
@@ -138,7 +138,7 @@
 
   const params = new URLSearchParams(location.search);
   const state = {
-    category: params.get("category") ? [params.get("category")] : [],
+    category: params.get("category") ? params.get("category").split(",").filter(Boolean) : [],
     fit: [],
     size: [],
     color: [],
@@ -153,9 +153,17 @@
     sort: "featured",
   };
 
+  const WASH_N_WEAR_SET = ["wash-n-wear", "karandi", "khaddar", "linen", "blended"];
+  const ACCESSORY_SET = ["caps", "wallets", "watches"];
+  function sameSet(a, b) {
+    if (a.length !== b.length) return false;
+    const bs = new Set(b);
+    return a.every((x) => bs.has(x));
+  }
+
   const CATEGORY_COPY = {
-    cotton: { title: "Cotton Unstitched", desc: "Everyday cotton suit lengths — breathable, colorfast, and easy for any tailor to work with." },
-    "wash-n-wear": { title: "Wash & Wear", desc: "Wrinkle-resistant unstitched lengths that go from wash to wardrobe with barely a crease." },
+    cotton: { title: "Premium Cotton", desc: "Breathable cotton suit lengths with timeless character — colorfast, easy for any tailor to work with." },
+    "wash-n-wear": { title: "Wash & Wear", desc: "Our signature collection — wrinkle-resistant unstitched lengths that go from wash to wardrobe with barely a crease." },
     karandi: { title: "Karandi", desc: "Brushed, warm karandi lengths built for the coldest months." },
     khaddar: { title: "Khaddar", desc: "Handwoven-look khaddar lengths — coarse, breathable and built to last a winter." },
     linen: { title: "Linen", desc: "Premium linen lengths, light and breathable for the hottest months." },
@@ -169,18 +177,28 @@
     document.getElementById("pageTitle").textContent = `Search: "${state.search}"`;
     document.getElementById("pageDesc").textContent = "Results matching your search.";
     document.getElementById("crumbLabel").textContent = "Search";
-    document.title = `Search — Kelsworth`;
+    document.title = `Search — AL-QUTUZ`;
+  } else if (sameSet(state.category, WASH_N_WEAR_SET)) {
+    document.getElementById("pageTitle").textContent = "Wash & Wear";
+    document.getElementById("pageDesc").textContent = "Premium unstitched fabrics designed for comfort, refinement and everyday wear — our signature collection.";
+    document.getElementById("crumbLabel").textContent = "Wash & Wear";
+    document.title = "Wash & Wear — AL-QUTUZ";
+  } else if (sameSet(state.category, ACCESSORY_SET)) {
+    document.getElementById("pageTitle").textContent = "Curated Accessories";
+    document.getElementById("pageDesc").textContent = "Caps, wallets and watches — a small, considered edit that extends the AL-QUTUZ wardrobe.";
+    document.getElementById("crumbLabel").textContent = "Accessories";
+    document.title = "Accessories — AL-QUTUZ";
   } else if (state.category.length === 1 && CATEGORY_COPY[state.category[0]]) {
     const copy = CATEGORY_COPY[state.category[0]];
     document.getElementById("pageTitle").textContent = copy.title;
     document.getElementById("pageDesc").textContent = copy.desc;
     document.getElementById("crumbLabel").textContent = copy.title;
-    document.title = `${copy.title} — Kelsworth`;
+    document.title = `${copy.title} — AL-QUTUZ`;
   } else if (state.saleOnly) {
     document.getElementById("pageTitle").textContent = "Sale";
     document.getElementById("pageDesc").textContent = "Reduced fabric while stock lasts. Final sale on marked-down items.";
     document.getElementById("crumbLabel").textContent = "Sale";
-    document.title = "Sale — Kelsworth";
+    document.title = "Sale — AL-QUTUZ";
   }
 
   let ALL_PRODUCTS = [];
@@ -272,7 +290,6 @@
     <a class="product-card" href="product.html?id=${p.id}">
       <div class="thumb">
         ${p.badge ? `<span class="badge ${onSale ? "sale" : ""}">${p.badge}</span>` : ""}
-        <span class="rivet tl"></span><span class="rivet tr"></span><span class="rivet bl"></span><span class="rivet br"></span>
         <img src="${p.image}" alt="${p.name}" loading="lazy" decoding="async" />
       </div>
       <div class="card-body">
