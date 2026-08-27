@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/images/brand/logo-alqutuz.png" type="image/png" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>FAQ — AL-QUTUZ</title>
-<meta name="description" content="Answers to common questions about AL-QUTUZ orders, shipping, sizing, returns, and payments." />
+<meta name="description" content="Answers to common questions about AL-QUTUZ unstitched fabrics, orders, shipping, returns, and payments." />
 <link rel="canonical" href="https://www.alqutuz.com/faq.html" />
 <meta property="og:site_name" content="AL-QUTUZ" />
 <meta property="og:title" content="FAQ — AL-QUTUZ" />
-<meta property="og:description" content="Answers to common questions about AL-QUTUZ orders, shipping, sizing, returns, and payments." />
+<meta property="og:description" content="Answers to common questions about AL-QUTUZ unstitched fabrics, orders, shipping, returns, and payments." />
 <meta property="og:type" content="website" />
 <meta property="og:image" content="/images/og-banner.svg" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="FAQ — AL-QUTUZ" />
-<meta name="twitter:description" content="Answers to common questions about AL-QUTUZ orders, shipping, sizing, returns, and payments." />
+<meta name="twitter:description" content="Answers to common questions about AL-QUTUZ unstitched fabrics, orders, shipping, returns, and payments." />
 <meta name="twitter:image" content="/images/og-banner.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -28,7 +28,7 @@
     { "@type": "Question", "name": "Can I change or cancel my order after placing it?", "acceptedAnswer": { "@type": "Answer", "text": "Contact us as soon as possible with your order number. We can usually adjust or cancel an order before it ships." } },
     { "@type": "Question", "name": "How long does delivery take?", "acceptedAnswer": { "@type": "Answer", "text": "3–5 working days in major cities, 5–7 working days elsewhere in Pakistan." } },
     { "@type": "Question", "name": "Is shipping free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, on orders over Rs. 5,000. Below that, a flat Rs. 250 shipping fee applies." } },
-    { "@type": "Question", "name": "How do I know what size to order?", "acceptedAnswer": { "@type": "Answer", "text": "Every product page lists whether a piece is available as an unstitched 2-piece or 3-piece suit length, along with live stock for each option." } },
+    { "@type": "Question", "name": "How much fabric do I receive?", "acceptedAnswer": { "@type": "Answer", "text": "Every product page identifies the fabric category, composition, and available stock. Our products are sold as unstitched lengths, so your tailor can cut and stitch them to your preferred fit." } },
     { "@type": "Question", "name": "What's your return policy?", "acceptedAnswer": { "@type": "Answer", "text": "Free exchange within 14 days of delivery, provided the item is unworn with tags attached." } },
     { "@type": "Question", "name": "Do I need an account to order?", "acceptedAnswer": { "@type": "Answer", "text": "No — guest checkout is available on every order. Creating an account just saves your addresses and order history for next time." } }
   ]
@@ -60,9 +60,9 @@
     <details class="faq-item"><summary>Is shipping free?</summary><p>Yes, on orders over Rs. 5,000. Below that, a flat Rs. 250 shipping fee applies.</p></details>
     <details class="faq-item"><summary>How do I track my order?</summary><p>Use our <a href="track.html">order tracking page</a> with your order number and the email you used at checkout.</p></details>
 
-    <div class="faq-category" id="sizing">Sizing &amp; Fit</div>
-    <details class="faq-item"><summary>How do I know what size to order?</summary><p>Every product page lists whether a piece is available as a 2-piece (shirt + shalwar) or 3-piece (shirt + shalwar + waistcoat) unstitched length, with live stock for each option. If you're unsure which suits your build, our general rule: 3-piece gives you extra fabric to work with if your tailor prefers more room.</p></details>
-    <details class="faq-item"><summary>What if my size is out of stock?</summary><p>Sizes marked out of stock will be restocked when possible — check back, or contact us to ask about restock timing on a specific item.</p></details>
+    <div class="faq-category" id="fabric">Fabric &amp; tailoring</div>
+    <details class="faq-item"><summary>How much fabric do I receive?</summary><p>Every product page identifies the fabric category, composition, and available stock. Our products are sold as unstitched lengths, so your tailor can cut and stitch them to your preferred fit.</p></details>
+    <details class="faq-item"><summary>What if a fabric is out of stock?</summary><p>Fabrics marked out of stock will be restocked when possible — check back, or contact us to ask about restock timing on a specific item.</p></details>
     <details class="faq-item"><summary>Does the fabric shrink after washing?</summary><p>Our fabric is pre-washed/sanforized where applicable, so shrinkage after the first wash is minimal when you follow the care instructions on each product page.</p></details>
 
     <div class="faq-category">Returns &amp; Exchanges</div>
@@ -77,12 +77,11 @@
 
 <footer class="site-footer" id="site-footer"></footer>
 
-<script src="js/api.js"></script>
-<script src="js/cart.js"></script>
-<script src="js/site.js"></script>
+<script src="js/api.js?v=20260827"></script>
+<script src="js/cart.js?v=20260827"></script>
+<script src="js/site.js?v=20260827"></script>
+<script src="js/bootstrap.js?v=20260827"></script>
 <script>
-  mountChrome("");
-
   document.getElementById("faqSearch").addEventListener("input", (e) => {
     const q = e.target.value.trim().toLowerCase();
     document.querySelectorAll(".faq-item").forEach((item) => {

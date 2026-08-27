@@ -4,7 +4,7 @@ This is the complete, order-taking version of the site: a Node.js backend
 with a real database, sitting behind the storefront — plus an admin panel
 to manage products, stock, orders, and promo codes.
 
-> Note: the npm package name (`kelsworth-backend`) and the Render service
+> Note: the npm package name (`alqutuz-store`) and the Render service
 > name in `render.yaml` were intentionally left unchanged during the
 > AL-QUTUZ rebrand — renaming either would change deploy URLs/slugs for an
 > already-provisioned service. Rename them only if you're setting up a
@@ -195,11 +195,11 @@ of storing files on the server — ask me when you're ready.
 ## 9. What's real vs. what's next
 **Real and working right now:**
 - Full product experience — image gallery with zoom/lightbox/swipe, color
-  and waist×length variants, fabric/care/shipping info, SKU and stock/low-
+  and fabric and care variants, fabric/care/shipping info, SKU and stock/low-
   stock indicators, tags, share buttons
 - Live search (instant suggestions, thumbnails, keyboard nav, recent
   searches) and multi-filter browsing (price, size, color, material,
-  stretch, collection, fit, availability)
+  stretch, collection, availability)
 - Star ratings and a full review system (verified purchase badges, photo/
   video uploads, helpful votes, sorting/filtering) — shown on the product
   page and as a summary on every product card sitewide

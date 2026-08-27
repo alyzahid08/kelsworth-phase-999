@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/images/brand/logo-alqutuz.png" type="image/png" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Contact Us — AL-QUTUZ</title>
 <meta name="description" content="Questions about an order, sizing, or a product? Reach the AL-QUTUZ team here." />
@@ -29,7 +29,7 @@
 
   <div class="static-page" style="max-width:960px">
     <h1>Contact Us</h1>
-    <p class="lede">Order questions, sizing help, or just feedback — we read every message ourselves, usually within one business day.</p>
+    <p class="lede">Order questions, fabric guidance, or just feedback — we read every message ourselves, usually within one business day.</p>
 
     <div class="contact-layout">
       <div>
@@ -43,7 +43,7 @@
             <select id="c_subject">
               <option>General Inquiry</option>
               <option>Order Issue</option>
-              <option>Sizing Help</option>
+              <option>Fabric Guidance</option>
               <option>Return / Exchange</option>
               <option>Wholesale / Press</option>
             </select>
@@ -74,12 +74,11 @@
 
 <footer class="site-footer" id="site-footer"></footer>
 
-<script src="js/api.js"></script>
-<script src="js/cart.js"></script>
-<script src="js/site.js"></script>
+<script src="js/api.js?v=20260827"></script>
+<script src="js/cart.js?v=20260827"></script>
+<script src="js/site.js?v=20260827"></script>
+<script src="js/bootstrap.js?v=20260827"></script>
 <script>
-  mountChrome("");
-
   document.getElementById("contactForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const errorEl = document.getElementById("contactError");

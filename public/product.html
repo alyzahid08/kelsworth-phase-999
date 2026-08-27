@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/images/brand/logo-alqutuz.png" type="image/png" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title id="pageTitleTag">Product — AL-QUTUZ</title>
 <meta name="description" id="metaDescription" content="Shop premium men's Wash & Wear and Cotton at AL-QUTUZ." />
@@ -108,20 +108,18 @@
   </div>
 </div>
 
-<script src="js/api.js"></script>
-<script src="js/cart.js"></script>
-<script src="js/site.js"></script>
+<script src="js/api.js?v=20260827"></script>
+<script src="js/cart.js?v=20260827"></script>
+<script src="js/site.js?v=20260827"></script>
+<script src="js/bootstrap.js?v=20260827"></script>
 <script>
-  mountChrome("collection");
 
   const params = new URLSearchParams(location.search);
   let productIdParam = params.get("id");
 
   let product = null;
   let variantsData = { colorVariants: [], completeTheLook: [], frequentlyBoughtWith: [], related: [] };
-  let selectedSize = null;
-  let selectedWaist = null;
-  let selectedLength = null;
+  let selectedSize = "Unstitched length";
   let qty = 1;
   let galleryItems = []; // [{type:'image'|'video', src, thumb}]
   let activeGalleryIndex = 0;
@@ -230,52 +228,25 @@
   });
   attachSwipe(document.getElementById("lightboxStage"), () => { goToGalleryIndex(activeGalleryIndex + 1); renderLightboxMedia(); }, () => { goToGalleryIndex(activeGalleryIndex - 1); renderLightboxMedia(); });
 
-  /* ---------------------------- Size helpers ---------------------------- */
-
-  function waistLengthOptions(sizes) {
-    const waists = new Set(), lengths = new Set();
-    sizes.forEach((s) => {
-      const [w, l] = s.split("x");
-      if (w) waists.add(w);
-      if (l) lengths.add(l);
-    });
-    return { waists: [...waists].sort((a, b) => a - b), lengths: [...lengths].sort((a, b) => a - b) };
-  }
+  /* ---------------------------- Fabric availability ---------------------------- */
 
   function updateAddButtonState() {
     const addBtn = document.getElementById("addToCartBtn");
     if (!addBtn) return;
     const stickyBtn = document.getElementById("stickyAtcBtn");
-    if (!product.inStock) {
-      addBtn.disabled = true; addBtn.textContent = "Out of Stock";
-      if (stickyBtn) { stickyBtn.disabled = true; stickyBtn.textContent = "Out of Stock"; }
-      return;
-    }
-    if (!selectedSize) {
-      const label = product.sizeType === "waist_length" ? "Select waist & length" : "Select a size";
-      addBtn.disabled = true; addBtn.textContent = label;
-      if (stickyBtn) { stickyBtn.disabled = false; stickyBtn.textContent = "Select a Size"; }
-      return;
-    }
-    const stock = product.stockBySize[selectedSize];
-    if (stock !== undefined && Number(stock) <= 0) {
-      addBtn.disabled = true; addBtn.textContent = "Out of Stock";
-      if (stickyBtn) { stickyBtn.disabled = true; stickyBtn.textContent = "Out of Stock"; }
-      return;
-    }
-    addBtn.disabled = false;
-    addBtn.textContent = "Add to Cart";
-    if (stickyBtn) { stickyBtn.disabled = false; stickyBtn.textContent = "Add to Cart"; }
+    const available = Boolean(product.inStock);
+    addBtn.disabled = !available;
+    addBtn.textContent = available ? "Add to Cart" : "Out of Stock";
+    if (stickyBtn) { stickyBtn.disabled = !available; stickyBtn.textContent = available ? "Add to Cart" : "Out of Stock"; }
     renderStockLine();
   }
 
   function renderStockLine() {
     const el = document.getElementById("stockLine");
     if (!el) return;
-    if (!selectedSize) { el.innerHTML = ""; return; }
-    const stock = Number(product.stockBySize[selectedSize] ?? 1);
+    const stock = Number(product.stock || 0);
     if (stock <= 0) {
-      el.innerHTML = `<span class="stock-dot out"></span> Out of stock in this size`;
+      el.innerHTML = `<span class="stock-dot out"></span> Out of stock`;
       el.className = "stock-line";
     } else if (stock <= product.lowStockThreshold) {
       el.innerHTML = `<span class="stock-dot low"></span> Only ${stock} left — order soon`;
@@ -305,32 +276,11 @@
         </div>
       </div>`;
   }
-
   function sizeBlockHTML() {
-    if (product.sizeType === "waist_length") {
-      const { waists, lengths } = waistLengthOptions(product.sizes);
-      return `
-        <div class="pd-block">
-          <div class="pd-label"><span>Waist &amp; Length</span><a href="#">Size Guide</a></div>
-          <div class="wl-select">
-            <select id="waistSelect"><option value="">Waist</option>${waists.map((w) => `<option value="${w}">${w}"</option>`).join("")}</select>
-            <select id="lengthSelect"><option value="">Length</option>${lengths.map((l) => `<option value="${l}">${l}"</option>`).join("")}</select>
-          </div>
-        </div>`;
-    }
     return `
       <div class="pd-block">
-        <div class="pd-label"><span>Size</span><a href="#">Size Guide</a></div>
-        <div class="size-options" id="sizeOptions">
-          ${product.sizes
-            .map((s) => {
-              const soldOut = product.sizesOutOfStock.includes(s);
-              const low = product.sizesLowStock.includes(s);
-              return `<button class="size-option${soldOut ? " sold-out" : ""}" data-size="${s}" ${soldOut ? "disabled" : ""}>${s}${low ? " •" : ""}</button>`;
-            })
-            .join("")}
-        </div>
-        ${product.sizesOutOfStock.length ? `<p style="font-size:11.5px;color:var(--ink-soft);margin-top:8px">Greyed-out sizes are currently out of stock. A dot marks low stock.</p>` : ""}
+        <div class="pd-label"><span>Product Type</span></div>
+        <p class="unstitched-note">Unstitched fabric length · Take it to your tailor for a custom fit.</p>
       </div>`;
   }
 
@@ -398,11 +348,11 @@
         </div>
 
         <div class="pd-actions" style="display:flex;gap:10px">
-          <button class="btn full" id="addToCartBtn" disabled>${product.inStock ? "Select a size" : "Out of Stock"}</button>
+          <button class="btn full" id="addToCartBtn" disabled>${product.inStock ? "Add to Cart" : "Out of Stock"}</button>
           <button class="wishlist-btn" id="wishlistBtn" type="button" aria-label="Save to wishlist">${HEART_ICON}</button>
         </div>
         <div class="stock-line" id="stockLine"></div>
-        <p class="pd-note" id="pdNote">Free shipping on orders over Rs. 5,000 · Cash on Delivery available</p>
+        <p class="pd-note" id="pdNote">Free shipping on orders over Rs. 5,000 · Cash on Delivery across Pakistan</p>
 
         <div class="pd-meta-row">
           <span>SKU: ${product.sku}</span>
@@ -441,26 +391,8 @@
       btn.addEventListener("click", () => switchVariant(btn.dataset.variant));
     });
 
-    if (product.sizeType === "waist_length") {
-      const applyWL = () => {
-        const w = document.getElementById("waistSelect").value;
-        const l = document.getElementById("lengthSelect").value;
-        selectedSize = w && l ? `${w}x${l}` : null;
-        updateAddButtonState();
-      };
-      document.getElementById("waistSelect").addEventListener("change", applyWL);
-      document.getElementById("lengthSelect").addEventListener("change", applyWL);
-    } else {
-      document.querySelectorAll(".size-option").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          if (!product.inStock || btn.disabled) return;
-          selectedSize = btn.dataset.size;
-          document.querySelectorAll(".size-option").forEach((b) => b.classList.remove("selected"));
-          btn.classList.add("selected");
-          updateAddButtonState();
-        });
-      });
-    }
+    selectedSize = "Unstitched length";
+    updateAddButtonState();
 
     document.getElementById("qtyMinus").addEventListener("click", () => {
       qty = Math.max(1, qty - 1);
@@ -472,9 +404,9 @@
     });
 
     document.getElementById("addToCartBtn").addEventListener("click", () => {
-      if (!selectedSize) return;
-      addToCart(product.id, selectedSize, qty);
-      announce(`${product.name}, size ${selectedSize}, added to cart.`);
+      if (!product.inStock) return;
+      addToCart(product.id, "Unstitched length", qty);
+      announce(`${product.name}, unstitched length, added to cart.`);
       const btn = document.getElementById("addToCartBtn");
       btn.textContent = "Added ✓";
       setTimeout(() => (btn.textContent = "Add to Cart"), 1400);
@@ -504,10 +436,7 @@
 
     document.getElementById("stickyAtcBtn").addEventListener("click", () => {
       const mainBtn = document.getElementById("addToCartBtn");
-      if (!selectedSize && product.inStock) {
-        document.querySelector(".pd-block")?.scrollIntoView({ behavior: "smooth", block: "center" });
-        return;
-      }
+
       if (!mainBtn.disabled) mainBtn.click();
     });
 
@@ -615,7 +544,7 @@
       const checked = [...document.querySelectorAll("[data-ctl-index]:checked")].map((cb) => list[Number(cb.dataset.ctlIndex)]);
       checked.forEach((p) => {
         // Cross-sell items add in their first available size as a sensible default.
-        if (p.defaultSize) addToCart(p.id, p.defaultSize, 1);
+        addToCart(p.id, "Unstitched length", 1);
       });
       const btn = document.getElementById("ctlAddBtn");
       btn.textContent = "Added ✓";

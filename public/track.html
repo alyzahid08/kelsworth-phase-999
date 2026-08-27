@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/images/brand/logo-alqutuz.png" type="image/png" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Track Your Order — AL-QUTUZ</title>
 <meta name="description" content="Check the status of your AL-QUTUZ order using your order number and email." />
@@ -34,7 +34,7 @@
   <form id="trackForm" style="display:flex;flex-direction:column;gap:14px;max-width:400px">
     <div class="field">
       <label for="orderNumber">Order Number</label>
-      <input type="text" id="orderNumber" placeholder="KW-XXXXXXXX" required />
+      <input type="text" id="orderNumber" placeholder="ALQ-XXXXXXXX" required />
     </div>
     <div class="field">
       <label for="email">Email</label>
@@ -49,11 +49,11 @@
 
 <footer class="site-footer" id="site-footer"></footer>
 
-<script src="js/api.js"></script>
-<script src="js/cart.js"></script>
-<script src="js/site.js"></script>
+<script src="js/api.js?v=20260827"></script>
+<script src="js/cart.js?v=20260827"></script>
+<script src="js/site.js?v=20260827"></script>
+<script src="js/bootstrap.js?v=20260827"></script>
 <script>
-  mountChrome("track");
 
   const STATUS_LABELS = {
     pending: "Pending",
@@ -87,7 +87,7 @@
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
             ${order.items
               .map(
-                (i) => `<tr><td style="padding:6px 0;font-size:13px">${i.product_name} · Size ${i.size} × ${i.qty}</td><td style="padding:6px 0;font-size:13px;text-align:right;font-family:var(--font-mono)">${formatPKR(i.unit_price * i.qty)}</td></tr>`
+                (i) => `<tr><td style="padding:6px 0;font-size:13px">${i.product_name} · Unstitched length × ${i.qty}</td><td style="padding:6px 0;font-size:13px;text-align:right;font-family:var(--font-mono)">${formatPKR(i.unit_price * i.qty)}</td></tr>`
               )
               .join("")}
           </table>

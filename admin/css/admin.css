@@ -116,7 +116,7 @@ tbody tr:hover { background: var(--paper); }
   color: var(--ink);
 }
 .status-pill.pending { background: rgba(138,122,92,0.14); color: #6b5c3c; }
-.status-pill.processing { background: rgba(58,48,36,0.12); color: var(--denim); }
+.status-pill.processing { background: rgba(58,48,36,0.12); color: var(--bronze); }
 .status-pill.shipped { background: rgba(17,17,17,0.08); color: var(--ink); }
 .status-pill.delivered { background: rgba(47,107,58,0.12); color: #2f6b3a; }
 .status-pill.cancelled { background: rgba(184,148,69,0.15); color: #8a6a2c; }
@@ -196,3 +196,11 @@ select.status-select {
   .stat-row { grid-template-columns: repeat(2, 1fr); }
   table { display: block; overflow-x: auto; }
 }
+
+
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.muted-mono, .upload-help { color: var(--ink-soft); font-family: var(--font-mono); font-size: 11px; }
+.upload-help { margin: 7px 0 0; font-family: var(--font-body); }
+.upload-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.upload-preview img { width: 72px; height: 86px; object-fit: cover; border: 1px solid var(--line); border-radius: 6px; }
+@media (max-width: 700px) { .admin-main { padding: 22px 16px 60px; } .admin-topbar { align-items: flex-start; gap: 16px; flex-direction: column; } .toolbar-left { flex-wrap: wrap; } .toolbar-left input { width: 100% !important; } .modal-box { width: calc(100vw - 24px); padding: 24px 16px; } .modal-actions { position: sticky; bottom: 0; background: var(--paper-alt); padding-top: 12px; } }

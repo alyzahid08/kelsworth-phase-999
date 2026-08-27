@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/images/brand/logo-alqutuz.png" type="image/png" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Dashboard — AL-QUTUZ Admin</title>
@@ -30,13 +30,13 @@
   </main>
 </div>
 
-<script src="js/admin.js"></script>
+<script src="js/admin.js?v=20260827"></script>
+<script src="js/bootstrap.js?v=20260827"></script>
 <script>
-  mountAdminChrome("dashboard");
 
   const STATUS_COLORS = {
-    pending: "var(--denim-soft)",
-    processing: "var(--denim)",
+    pending: "var(--bronze-soft)",
+    processing: "var(--bronze)",
     shipped: "var(--ink)",
     delivered: "#2f6b3a",
     cancelled: "var(--accent)",
@@ -148,13 +148,13 @@
     if (!items.length) return `<p style="font-size:13px;color:var(--ink-soft)">Nothing low on stock right now.</p>`;
     return `
       <table>
-        <thead><tr><th>Product</th><th>Low Sizes</th></tr></thead>
+        <thead><tr><th>Product</th><th>Stock available</th></tr></thead>
         <tbody>
           ${items
             .map(
               (p) => `<tr>
                 <td><a href="products.html" style="text-decoration:underline">${p.name}</a></td>
-                <td>${p.lowSizes.map((s) => `${s.size} (${s.stock === 0 ? "out" : s.stock})`).join(", ")}</td>
+                <td>${p.stock} fabric length${p.stock === 1 ? "" : "s"}</td>
               </tr>`
             )
             .join("")}

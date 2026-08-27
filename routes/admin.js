@@ -1,4 +1,8 @@
 const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+const multer = require("multer");
 const { query } = require("../db");
 const { requireAdminApi, requireRole } = require("../middleware/auth");
 const { sendOrderStatusUpdate } = require("../lib/email");
@@ -6,6 +10,28 @@ const { sendWhatsAppNotification } = require("../lib/whatsapp");
 
 const router = express.Router();
 router.use(requireAdminApi);
+
+const uploadDir = path.join(__dirname, "..", "public", "images", "uploads");
+fs.mkdirSync(uploadDir, { recursive: true });
+const imageUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      cb(null, `product-${Date.now()}-${crypto.randomBytes(5).toString("hex")}${ext}`);
+    },
+  }),
+  limits: { files: 8, fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    cb(null, allowed.includes(file.mimetype));
+  },
+});
+
+router.post("/uploads/images", requireRole("products", "create"), imageUpload.array("images", 8), (req, res) => {
+  if (!req.files?.length) return res.status(400).json({ error: "Choose at least one JPG, PNG, WEBP, or GIF image" });
+  res.status(201).json({ images: req.files.map((file) => `/images/uploads/${file.filename}`) });
+});
 
 /* ---------------------------- Orders ---------------------------- */
 
@@ -119,7 +145,7 @@ router.post("/orders/:id/confirm", requireRole("orders", "update"), async (req, 
 // GET /api/admin/products — includes inactive products, unlike the public API
 router.get("/products", requireRole("products", "read"), async (req, res) => {
   try {
-    const { rows } = await query("SELECT * FROM products ORDER BY id ASC");
+    const { rows } = await query("SELECT * FROM products WHERE category IN ('cotton', 'wash-n-wear') ORDER BY id ASC");
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -128,15 +154,13 @@ router.get("/products", requireRole("products", "read"), async (req, res) => {
 });
 
 function validateProductBody(body) {
-  const required = ["slug", "name", "category", "fit", "color", "price", "sizes", "image"];
+  const required = ["slug", "name", "category", "color", "price", "image"];
   for (const field of required) {
     if (body[field] === undefined || body[field] === null || body[field] === "") {
       return `Missing required field: ${field}`;
     }
   }
-  if (!Array.isArray(body.sizes) || body.sizes.length === 0) {
-    return "Sizes must be a non-empty list";
-  }
+  if (!["cotton", "wash-n-wear"].includes(body.category)) return "Category must be Cotton or Wash & Wear";
   if (isNaN(Number(body.price))) return "Price must be a number";
   return null;
 }
@@ -152,8 +176,8 @@ router.post("/products", requireRole("products", "create"), async (req, res) => 
   const error = validateProductBody(body);
   if (error) return res.status(400).json({ error });
 
-  const stockBySize = body.stockBySize && typeof body.stockBySize === "object" ? body.stockBySize : {};
-  const totalStock = body.stock !== undefined ? Number(body.stock) : sumStockBySize(stockBySize) ?? 100;
+  const stockBySize = {};
+  const totalStock = body.stock !== undefined ? Math.max(0, Number(body.stock) || 0) : 0;
   const images = Array.isArray(body.images) ? body.images : [];
   const tags = Array.isArray(body.tags) ? body.tags : [];
   const skuBySize = body.skuBySize && typeof body.skuBySize === "object" ? body.skuBySize : {};
@@ -173,9 +197,9 @@ router.post("/products", requireRole("products", "create"), async (req, res) => 
                $29, $30, $31, $32)
        RETURNING *`,
       [
-        body.slug, body.name, body.category, body.fit, body.color,
+        body.slug, body.name, body.category, "unstitched", body.color,
         Number(body.price), body.salePrice ? Number(body.salePrice) : null,
-        JSON.stringify(body.sizes), body.image, body.badge || null,
+        JSON.stringify([]), body.image, body.badge || null,
         body.description || "", body.fabric || "", body.care || "",
         totalStock, JSON.stringify(stockBySize),
         body.active !== undefined ? Boolean(body.active) : true,
@@ -200,7 +224,7 @@ router.post("/products", requireRole("products", "create"), async (req, res) => 
 router.patch("/products/:id", requireRole("products", "update"), async (req, res) => {
   const body = req.body || {};
   const fieldMap = {
-    slug: "slug", name: "name", category: "category", fit: "fit", color: "color",
+    slug: "slug", name: "name", category: "category", color: "color",
     price: "price", salePrice: "sale_price", image: "image", badge: "badge",
     description: "description", fabric: "fabric", care: "care", active: "active",
     videoUrl: "video_url", sku: "sku", styleCode: "style_code", sizeType: "size_type",
@@ -215,6 +239,9 @@ router.patch("/products/:id", requireRole("products", "update"), async (req, res
   const sets = [];
   const params = [];
 
+  if (body.category !== undefined && !["cotton", "wash-n-wear"].includes(body.category)) {
+    return res.status(400).json({ error: "Category must be Cotton or Wash & Wear" });
+  }
   for (const [key, column] of Object.entries(fieldMap)) {
     if (body[key] !== undefined) {
       params.push(body[key]);
@@ -228,16 +255,14 @@ router.patch("/products/:id", requireRole("products", "update"), async (req, res
     }
   }
   if (body.sizes !== undefined) {
-    params.push(JSON.stringify(body.sizes));
+    params.push(JSON.stringify([]));
     sets.push(`sizes = $${params.length}`);
   }
+  params.push("unstitched");
+  sets.push(`fit = $${params.length}`);
   if (body.stockBySize !== undefined) {
-    params.push(JSON.stringify(body.stockBySize));
+    params.push(JSON.stringify({}));
     sets.push(`stock_by_size = $${params.length}`);
-    if (body.stock === undefined) {
-      params.push(sumStockBySize(body.stockBySize) ?? 0);
-      sets.push(`stock = $${params.length}`);
-    }
   }
   if (body.stock !== undefined) {
     params.push(Number(body.stock));
@@ -467,8 +492,8 @@ router.get("/analytics", requireRole("analytics", "read"), async (req, res) => {
         LIMIT 5
       `),
       query(`
-        SELECT id, name, slug, sizes, stock_by_size, low_stock_threshold
-        FROM products WHERE active = true
+        SELECT id, name, slug, stock, low_stock_threshold
+        FROM products WHERE active = true AND category IN ('cotton', 'wash-n-wear')
       `),
     ]);
 
@@ -484,19 +509,11 @@ router.get("/analytics", requireRole("analytics", "read"), async (req, res) => {
 
     const lowStockProducts = [];
     for (const p of stockRows) {
-      const stockBySize = p.stock_by_size || {};
+      const stock = Number(p.stock || 0);
       const threshold = p.low_stock_threshold ?? 5;
-      const sizes = p.sizes || [];
-      const lowSizes = sizes.filter((s) => Number(stockBySize[s] ?? 0) <= threshold);
-      if (lowSizes.length) {
-        lowStockProducts.push({
-          name: p.name,
-          slug: p.slug,
-          lowSizes: lowSizes.map((s) => ({ size: s, stock: Number(stockBySize[s] ?? 0) })),
-        });
-      }
+      if (stock <= threshold) lowStockProducts.push({ name: p.name, slug: p.slug, stock });
     }
-    lowStockProducts.sort((a, b) => Math.min(...a.lowSizes.map((s) => s.stock)) - Math.min(...b.lowSizes.map((s) => s.stock)));
+    lowStockProducts.sort((a, b) => a.stock - b.stock);
 
     res.json({
       ...totalsRows[0],

@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/images/brand/logo-alqutuz.png" type="image/png" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Wash & Wear, Cotton & Accessories — AL-QUTUZ</title>
-<meta name="description" content="Shop men's unstitched Wash &amp; Wear and Cotton fabrics, plus curated caps, wallets and watches at AL-QUTUZ. Filter by fabric, price and colour." />
+<title>Wash & Wear & Cotton — AL-QUTUZ</title>
+<meta name="description" content="Shop men's unstitched Wash &amp; Wear and Cotton fabrics, plus curated unstitched Wash & Wear and Cotton lengths at AL-QUTUZ. Filter by fabric, price and colour." />
 <meta property="og:site_name" content="AL-QUTUZ" />
 <link rel="canonical" href="https://www.alqutuz.com/collection.html" />
-<meta property="og:title" content="Wash & Wear, Cotton & Accessories — AL-QUTUZ" />
-<meta property="og:description" content="Shop men's unstitched Wash &amp; Wear and Cotton fabrics, plus curated caps, wallets and watches at AL-QUTUZ. Filter by fabric, price and colour." />
+<meta property="og:title" content="Wash & Wear & Cotton — AL-QUTUZ" />
+<meta property="og:description" content="Shop men's unstitched Wash &amp; Wear and Cotton fabrics, plus curated unstitched Wash & Wear and Cotton lengths at AL-QUTUZ. Filter by fabric, price and colour." />
 <meta property="og:type" content="website" />
 <meta property="og:image" content="/images/og-banner.svg" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Wash & Wear, Cotton & Accessories — AL-QUTUZ" />
-<meta name="twitter:description" content="Shop men's unstitched Wash &amp; Wear and Cotton fabrics, plus curated caps, wallets and watches at AL-QUTUZ. Filter by fabric, price and colour." />
+<meta name="twitter:title" content="Wash & Wear & Cotton — AL-QUTUZ" />
+<meta name="twitter:description" content="Shop men's unstitched Wash &amp; Wear and Cotton fabrics, plus curated unstitched Wash & Wear and Cotton lengths at AL-QUTUZ. Filter by fabric, price and colour." />
 <meta name="twitter:image" content="/images/og-banner.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
   "@type": "BreadcrumbList",
   "itemListElement": [
     { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.alqutuz.com/index.html" },
-    { "@type": "ListItem", "position": 2, "name": "Wash & Wear, Cotton & Accessories", "item": "https://www.alqutuz.com/collection.html" }
+    { "@type": "ListItem", "position": 2, "name": "Wash & Wear & Cotton", "item": "https://www.alqutuz.com/collection.html" }
   ]
 }
 </script>
@@ -35,11 +35,11 @@
 <header class="site-header" id="site-header"></header>
 
 <div id="main-content" tabindex="-1" class="container">
-  <div class="breadcrumb"><a href="index.html">Home</a> / <span id="crumbLabel">Wash & Wear, Cotton & Accessories</span></div>
+  <div class="breadcrumb"><a href="index.html">Home</a> / <span id="crumbLabel">Wash & Wear &amp; Cotton</span></div>
 
   <div class="collection-head">
-    <h1 id="pageTitle">Wash & Wear, Cotton &amp; Accessories</h1>
-    <p id="pageDesc">Premium unstitched fabrics for everyday distinction — Wash &amp; Wear, Cotton, and a curated edit of caps, wallets and watches.</p>
+    <h1 id="pageTitle">Wash &amp; Wear &amp; Cotton</h1>
+    <p id="pageDesc">Premium unstitched fabric lengths for everyday distinction — explore our Wash &amp; Wear and Cotton collections.</p>
   </div>
 
   <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
@@ -59,29 +59,14 @@
         <div class="filter-options" id="categoryFilters"></div>
       </details>
 
-      <details class="filter-group" open>
-        <summary>Piece</summary>
-        <div class="filter-options" id="fitFilters"></div>
-      </details>
-
       <details class="filter-group">
         <summary>Color</summary>
         <div class="filter-options" id="colorFilters"></div>
       </details>
 
       <details class="filter-group">
-        <summary>Size</summary>
-        <div class="size-grid" id="sizeFilters"></div>
-      </details>
-
-      <details class="filter-group">
         <summary>Material</summary>
         <div class="filter-options" id="materialFilters"></div>
-      </details>
-
-      <details class="filter-group">
-        <summary>Stretch</summary>
-        <div class="filter-options" id="stretchFilters"></div>
       </details>
 
       <details class="filter-group">
@@ -130,20 +115,17 @@
 
 <footer class="site-footer" id="site-footer"></footer>
 
-<script src="js/api.js"></script>
-<script src="js/cart.js"></script>
-<script src="js/site.js"></script>
+<script src="js/api.js?v=20260827"></script>
+<script src="js/cart.js?v=20260827"></script>
+<script src="js/site.js?v=20260827"></script>
+<script src="js/bootstrap.js?v=20260827"></script>
 <script>
-  mountChrome("collection");
 
   const params = new URLSearchParams(location.search);
   const state = {
     category: params.get("category") ? params.get("category").split(",").filter(Boolean) : [],
-    fit: [],
-    size: [],
     color: [],
     material: [],
-    stretch: [],
     collection: [],
     priceMin: null,
     priceMax: null,
@@ -153,8 +135,7 @@
     sort: "featured",
   };
 
-  const WASH_N_WEAR_SET = ["wash-n-wear", "karandi", "khaddar", "linen", "blended"];
-  const ACCESSORY_SET = ["caps", "wallets", "watches"];
+  const WASH_N_WEAR_SET = ["wash-n-wear"];
   function sameSet(a, b) {
     if (a.length !== b.length) return false;
     const bs = new Set(b);
@@ -162,16 +143,8 @@
   }
 
   const CATEGORY_COPY = {
-    cotton: { title: "Premium Cotton", desc: "Breathable cotton suit lengths with timeless character — colorfast, easy for any tailor to work with." },
+    cotton: { title: "Premium Cotton", desc: "Breathable cotton unstitched lengths with timeless character — selected for comfort and easy tailoring." },
     "wash-n-wear": { title: "Wash & Wear", desc: "Our signature collection — wrinkle-resistant unstitched lengths that go from wash to wardrobe with barely a crease." },
-    karandi: { title: "Karandi", desc: "Brushed, warm karandi lengths built for the coldest months." },
-    khaddar: { title: "Khaddar", desc: "Handwoven-look khaddar lengths — coarse, breathable and built to last a winter." },
-    linen: { title: "Linen", desc: "Premium linen lengths, light and breathable for the hottest months." },
-    blended: { title: "Blended Fabric", desc: "Practical cotton-poly blended lengths — easy care, dependable everyday fabric." },
-    wallets: { title: "Wallets", desc: "Leather and canvas wallets built for daily carry — bifolds, card holders and trifolds." },
-    watches: { title: "Watches", desc: "Chronographs, minimal dials and sport digitals — Japanese quartz, built to last." },
-    caps: { title: "Caps", desc: "Baseball caps, dad caps and snapbacks in washed cotton and raw denim." },
-    bracelets: { title: "Bracelets", desc: "Leather, beaded and paracord bracelets for men. Stack them or wear solo." },
   };
   if (state.search) {
     document.getElementById("pageTitle").textContent = `Search: "${state.search}"`;
@@ -183,11 +156,6 @@
     document.getElementById("pageDesc").textContent = "Premium unstitched fabrics designed for comfort, refinement and everyday wear — our signature collection.";
     document.getElementById("crumbLabel").textContent = "Wash & Wear";
     document.title = "Wash & Wear — AL-QUTUZ";
-  } else if (sameSet(state.category, ACCESSORY_SET)) {
-    document.getElementById("pageTitle").textContent = "Curated Accessories";
-    document.getElementById("pageDesc").textContent = "Caps, wallets and watches — a small, considered edit that extends the AL-QUTUZ wardrobe.";
-    document.getElementById("crumbLabel").textContent = "Accessories";
-    document.title = "Accessories — AL-QUTUZ";
   } else if (state.category.length === 1 && CATEGORY_COPY[state.category[0]]) {
     const copy = CATEGORY_COPY[state.category[0]];
     document.getElementById("pageTitle").textContent = copy.title;
@@ -219,20 +187,6 @@
     });
   }
 
-  function buildSizeGrid(sizes) {
-    const el = document.getElementById("sizeFilters");
-    el.innerHTML = sizes.map((s) => `<button class="size-chip ${state.size.includes(s) ? "active" : ""}" data-size="${s}">${s}</button>`).join("");
-    el.querySelectorAll(".size-chip").forEach((chip) => {
-      chip.addEventListener("click", () => {
-        const s = chip.dataset.size;
-        if (state.size.includes(s)) state.size = state.size.filter((x) => x !== s);
-        else state.size.push(s);
-        buildSizeGrid(sizes);
-        render();
-      });
-    });
-  }
-
   document.getElementById("saleOnly").checked = state.saleOnly;
   document.getElementById("saleOnly").addEventListener("change", (e) => {
     state.saleOnly = e.target.checked;
@@ -258,8 +212,8 @@
     render();
   });
   document.getElementById("clearFilters").addEventListener("click", () => {
-    state.category = []; state.fit = []; state.size = [];
-    state.color = []; state.material = []; state.stretch = []; state.collection = [];
+    state.category = [];
+    state.color = []; state.material = []; state.collection = [];
     state.priceMin = null; state.priceMax = null; state.saleOnly = false; state.inStockOnly = false;
     document.getElementById("priceMin").value = "";
     document.getElementById("priceMax").value = "";
@@ -307,42 +261,15 @@
 
   const STRETCH_LABELS = { none: "No Stretch", low: "Some Stretch", high: "High Stretch" };
 
-  function buildStretchGroup() {
-    const container = document.getElementById("stretchFilters");
-    const present = [...new Set(ALL_PRODUCTS.map((p) => p.stretch || "none"))];
-    container.innerHTML = present
-      .map(
-        (v) =>
-          `<label><input type="checkbox" value="${v}" data-key="stretch" ${state.stretch.includes(v) ? "checked" : ""}/> ${STRETCH_LABELS[v] || v}</label>`
-      )
-      .join("");
-    container.querySelectorAll("input").forEach((cb) => {
-      cb.addEventListener("change", () => {
-        if (cb.checked) state.stretch.push(cb.value);
-        else state.stretch = state.stretch.filter((x) => x !== cb.value);
-        render();
-      });
-    });
-  }
-
   function setupFilterUI() {
     const categories = [...new Set(ALL_PRODUCTS.map((p) => p.category))];
-    const fits = [...new Set(ALL_PRODUCTS.map((p) => p.fit))];
     const colors = [...new Set(ALL_PRODUCTS.map((p) => p.color))].sort();
     const materials = [...new Set(ALL_PRODUCTS.map((p) => p.material).filter(Boolean))].sort();
     const collections = [...new Set(ALL_PRODUCTS.map((p) => p.collection).filter(Boolean))].sort();
-    const sizes = [...new Set(ALL_PRODUCTS.flatMap((p) => p.sizes))].sort((a, b) => {
-      const na = parseInt(a), nb = parseInt(b);
-      if (!isNaN(na) && !isNaN(nb)) return na - nb;
-      return a.localeCompare(b);
-    });
     buildCheckboxGroup(document.getElementById("categoryFilters"), categories, "category");
-    buildCheckboxGroup(document.getElementById("fitFilters"), fits, "fit");
     buildCheckboxGroup(document.getElementById("colorFilters"), colors, "color");
     buildCheckboxGroup(document.getElementById("materialFilters"), materials, "material");
     buildCheckboxGroup(document.getElementById("collectionFilters"), collections, "collection");
-    buildStretchGroup();
-    buildSizeGrid(sizes);
   }
 
   function render() {
@@ -350,13 +277,10 @@
       const haystack = `${p.name} ${p.category} ${p.color} ${p.sku || ""} ${(p.tags || []).join(" ")}`.toLowerCase();
       if (state.search && !haystack.includes(state.search.toLowerCase())) return false;
       if (state.category.length && !state.category.includes(p.category)) return false;
-      if (state.fit.length && !state.fit.includes(p.fit)) return false;
-      if (state.color.length && !state.color.includes(p.color)) return false;
+        if (state.color.length && !state.color.includes(p.color)) return false;
       if (state.material.length && !state.material.includes(p.material)) return false;
-      if (state.stretch.length && !state.stretch.includes(p.stretch || "none")) return false;
-      if (state.collection.length && !state.collection.includes(p.collection)) return false;
-      if (state.size.length && !p.sizes.some((s) => state.size.includes(s))) return false;
-      if (state.saleOnly && p.salePrice == null) return false;
+        if (state.collection.length && !state.collection.includes(p.collection)) return false;
+        if (state.saleOnly && p.salePrice == null) return false;
       if (state.inStockOnly && !p.inStock) return false;
       const effectivePrice = p.salePrice ?? p.price;
       if (state.priceMin != null && effectivePrice < state.priceMin) return false;

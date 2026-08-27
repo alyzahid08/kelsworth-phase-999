@@ -10,17 +10,12 @@ const HOME_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const MENU_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`;
 const CLOSE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 5l14 14M19 5 5 19"/></svg>`;
 
-// Fabric-family groupings behind the primary nav — the storefront speaks in
-// "Wash & Wear" / "Cotton" / "Accessories", the database still speaks in the
-// original fine-grained categories. Grouping happens via a comma-separated
-// ?category= list that collection.html already knows how to split.
-const WASH_N_WEAR_CATEGORIES = ["wash-n-wear", "karandi", "khaddar", "linen", "blended"];
-const ACCESSORY_CATEGORIES = ["caps", "wallets", "watches"];
+// Fabric-family groupings behind the primary nav — the storefront speaks in the two product families, Wash & Wear and Cotton.
+const WASH_N_WEAR_CATEGORIES = ["wash-n-wear"];
 
 const NAV_LINKS = [
-  { label: "Wash & Wear", href: `collection.html?category=${WASH_N_WEAR_CATEGORIES.join(",")}`, key: "wash-n-wear" },
+  { label: "Wash & Wear", href: "collection.html?category=wash-n-wear", key: "wash-n-wear" },
   { label: "Cotton", href: "collection.html?category=cotton", key: "cotton" },
-  { label: "Accessories", href: `collection.html?category=${ACCESSORY_CATEGORIES.join(",")}`, key: "accessories" },
   { label: "Collections", href: "collection.html", key: "collection" },
   { label: "About", href: "about.html", key: "about" },
 ];
@@ -125,7 +120,7 @@ function trustBadgesHTML() {
     { icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6l-9-4Z"/></svg>`, label: "Quality Guaranteed" },
   ];
   return `
-    <div class="trust-badges">
+    <div class="trust-badges" aria-label="Store promises">
       ${badges.map((b) => `<div class="trust-badge">${b.icon}<span>${b.label}</span></div>`).join("")}
     </div>`;
 }
@@ -136,7 +131,7 @@ function footerHTML() {
     <div class="newsletter">
       <div>
         <h3>Join the list.</h3>
-        <p>New drops, restocks, and first access to sale — no spam, unsubscribe anytime.</p>
+        <p>New fabric drops, restocks, and first access to seasonal offers — no spam, unsubscribe anytime.</p>
       </div>
       <form class="newsletter-form" id="newsletterForm">
         <input type="email" placeholder="Your email address" required aria-label="Email address" />
@@ -149,7 +144,7 @@ function footerHTML() {
     <div class="footer-col footer-brand-col">
       <h4 class="footer-brand-name">AL-QUTUZ <span class="footer-brand-urdu">القطز</span></h4>
       <p class="footer-brand-tagline" dir="rtl">اپنی شان، اپنا انداز</p>
-      <p>A premium men's fabric house — Wash &amp; Wear and Cotton unstitched lengths, with a curated edit of caps, wallets and watches.</p>
+      <p>A premium men's unstitched fabric house — Wash &amp; Wear and Cotton lengths selected for comfort, refinement and everyday wear.</p>
       <div class="social-row">${socialRowHTML()}</div>
     </div>
     <div class="footer-col">
@@ -157,15 +152,13 @@ function footerHTML() {
       <ul>
         <li><a href="collection.html?category=${WASH_N_WEAR_CATEGORIES.join(",")}">Wash &amp; Wear</a></li>
         <li><a href="collection.html?category=cotton">Cotton</a></li>
-        <li><a href="collection.html?category=${ACCESSORY_CATEGORIES.join(",")}">Accessories</a></li>
         <li><a href="collection.html">All Collections</a></li>
-        <li><a href="collection.html?sale=1">Sale</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Help</h4>
       <ul>
-        <li><a href="faq.html#sizing">Size Guide</a></li>
+        <li><a href="faq.html#fabric">Tailoring Guide</a></li>
         <li><a href="shipping.html">Shipping &amp; Delivery</a></li>
         <li><a href="refund.html">Returns &amp; Exchanges</a></li>
         <li><a href="track.html">Track Order</a></li>
@@ -185,12 +178,12 @@ function footerHTML() {
   </div>
   <div class="footer-bottom">
     <span>© ${new Date().getFullYear()} AL-QUTUZ. All rights reserved.</span>
-    <span class="payment-note">Payment: Cash on Delivery</span>
+    <span class="payment-note">Cash on Delivery across Pakistan</span>
     <span>Karachi, Pakistan</span>
   </div>`;
 }
 
-const RECENT_SEARCHES_KEY = "vw_recent_searches";
+const RECENT_SEARCHES_KEY = "alqutuz_recent_searches";
 function getRecentSearches() {
   try { return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY)) || []; } catch (e) { return []; }
 }

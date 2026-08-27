@@ -4,6 +4,9 @@ const { requireCustomer, attachCustomerIfPresent } = require("../middleware/cust
 
 const router = express.Router();
 
+const STORE_CATEGORIES = ["wash-n-wear", "cotton"];
+const CATEGORY_LABELS = { "wash-n-wear": "Wash & Wear", cotton: "Cotton" };
+
 // Reused by any query that needs per-product rating aggregates alongside the
 // row itself — avoids a second round trip or N+1 queries for star ratings.
 const RATINGS_JOIN = `
@@ -14,15 +17,10 @@ const RATINGS_JOIN = `
 `;
 
 function serializeProduct(row) {
-  const stockBySize = row.stock_by_size || {};
-  const sizesOutOfStock = (row.sizes || []).filter(
-    (s) => Object.prototype.hasOwnProperty.call(stockBySize, s) && Number(stockBySize[s]) <= 0
-  );
+  const stockBySize = {};
+  const sizesOutOfStock = [];
   const lowStockThreshold = row.low_stock_threshold ?? 5;
-  const sizesLowStock = (row.sizes || []).filter((s) => {
-    const n = Number(stockBySize[s]);
-    return Object.prototype.hasOwnProperty.call(stockBySize, s) && n > 0 && n <= lowStockThreshold;
-  });
+  const sizesLowStock = [];
   const gallery = Array.isArray(row.images) && row.images.length ? row.images : [row.image];
 
   return {
@@ -30,14 +28,9 @@ function serializeProduct(row) {
     dbId: row.id,
     name: row.name,
     category: row.category,
-    fit: row.fit,
     color: row.color,
     price: row.price,
     salePrice: row.sale_price,
-    sizes: row.sizes,
-    sizesOutOfStock,
-    sizesLowStock,
-    stockBySize,
     image: row.image,
     images: gallery,
     videoUrl: row.video_url || null,
@@ -45,19 +38,17 @@ function serializeProduct(row) {
     description: row.description,
     fabric: row.fabric,
     care: row.care,
-    inStock: row.stock > 0 && sizesOutOfStock.length < (row.sizes || []).length,
+    inStock: Number(row.stock) > 0,
     tags: row.tags || [],
     sku: row.sku || row.slug.toUpperCase(),
     skuBySize: row.sku_by_size || {},
     styleCode: row.style_code || null,
-    sizeType: row.size_type || "standard",
     lowStockThreshold,
     completeTheLook: row.complete_the_look || [],
     frequentlyBoughtWith: row.frequently_bought_with || [],
     estimatedDelivery: row.estimated_delivery,
     returnPolicy: row.return_policy,
     material: row.material,
-    stretch: row.stretch || "none",
     collection: row.collection || null,
     isBestseller: Boolean(row.is_bestseller),
     rating: row.rating_avg ? Number(row.rating_avg) : 0,
@@ -66,11 +57,6 @@ function serializeProduct(row) {
 }
 
 function lightProductCard(row) {
-  const stockBySize = row.stock_by_size || {};
-  const firstAvailableSize =
-    (row.sizes || []).find((s) => !Object.prototype.hasOwnProperty.call(stockBySize, s) || Number(stockBySize[s]) > 0) ||
-    (row.sizes || [])[0] ||
-    null;
   return {
     id: row.slug,
     name: row.name,
@@ -80,7 +66,6 @@ function lightProductCard(row) {
     salePrice: row.sale_price,
     image: row.image,
     badge: row.badge,
-    defaultSize: firstAvailableSize,
     rating: row.rating_avg ? Number(row.rating_avg) : 0,
     reviewCount: row.review_count ? Number(row.review_count) : 0,
   };
@@ -93,7 +78,8 @@ router.get("/", async (req, res) => {
       `SELECT p.*, ratings.avg_rating AS rating_avg, ratings.review_count AS review_count
        FROM products p
        ${RATINGS_JOIN}
-       WHERE p.active = true ORDER BY p.id ASC`
+       WHERE p.active = true AND p.category = ANY($1::text[]) ORDER BY p.id ASC`,
+      [STORE_CATEGORIES]
     );
     // Short and public: the catalog doesn't change every second, and this
     // response has nothing customer-specific in it, so a brief cache takes
@@ -107,18 +93,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-const CATEGORY_LABELS = {
-  cotton: "Cotton Unstitched",
-  "wash-n-wear": "Wash & Wear",
-  karandi: "Karandi",
-  khaddar: "Khaddar",
-  linen: "Linen",
-  blended: "Blended Fabric",
-  wallets: "Wallets",
-  caps: "Caps",
-  watches: "Watches",
-  bracelets: "Bracelets",
-};
 
 // GET /api/products/search?q=...&limit=8 — instant search suggestions.
 // Registered before /:slug so "search" itself is never mistaken for a slug.
@@ -130,7 +104,7 @@ router.get("/search", async (req, res) => {
   if (!q) return res.json({ query: "", products: [], categories: [] });
 
   try {
-    const { rows } = await query("SELECT * FROM products WHERE active = true");
+    const { rows } = await query("SELECT * FROM products WHERE active = true AND category = ANY($1::text[])", [STORE_CATEGORIES]);
 
     const scored = [];
     for (const row of rows) {
@@ -179,11 +153,11 @@ router.get("/reviews/featured", async (req, res) => {
       `SELECT r.id, r.customer_name, r.rating, r.title, r.body, r.verified_purchase, r.helpful_count, r.created_at,
               p.name AS product_name, p.slug AS product_slug
        FROM product_reviews r
-       JOIN products p ON p.id = r.product_id AND p.active = true
+       JOIN products p ON p.id = r.product_id AND p.active = true AND p.category = ANY($2::text[])
        WHERE r.rating >= 4 AND length(r.body) > 20
        ORDER BY r.rating DESC, r.helpful_count DESC, r.created_at DESC
        LIMIT $1`,
-      [limit]
+      [limit, STORE_CATEGORIES]
     );
     res.set("Cache-Control", "public, max-age=60");
     res.json(
@@ -206,15 +180,15 @@ router.get("/reviews/featured", async (req, res) => {
   }
 });
 
-// GET /api/products/:slug — single product by slug (e.g. vw-101)
+// GET /api/products/:slug — single product by slug (e.g. alq-ww-black)
 router.get("/:slug", async (req, res) => {
   try {
     const { rows } = await query(
       `SELECT p.*, ratings.avg_rating AS rating_avg, ratings.review_count AS review_count
        FROM products p
        ${RATINGS_JOIN}
-       WHERE p.slug = $1 AND p.active = true`,
-      [req.params.slug]
+       WHERE p.slug = $1 AND p.active = true AND p.category = ANY($2::text[])`,
+      [req.params.slug, STORE_CATEGORIES]
     );
     if (!rows.length) return res.status(404).json({ error: "Product not found" });
     res.set("Cache-Control", "public, max-age=30");
@@ -231,8 +205,8 @@ router.get("/:slug", async (req, res) => {
 router.get("/:slug/variants", async (req, res) => {
   try {
     const { rows } = await query(
-      "SELECT * FROM products WHERE slug = $1 AND active = true",
-      [req.params.slug]
+      "SELECT * FROM products WHERE slug = $1 AND active = true AND category = ANY($2::text[])",
+      [req.params.slug, STORE_CATEGORIES]
     );
     if (!rows.length) return res.status(404).json({ error: "Product not found" });
     const product = rows[0];
@@ -240,8 +214,8 @@ router.get("/:slug/variants", async (req, res) => {
     let colorVariants = [];
     if (product.style_code) {
       const { rows: siblings } = await query(
-        "SELECT * FROM products WHERE style_code = $1 AND active = true ORDER BY id ASC",
-        [product.style_code]
+        "SELECT * FROM products WHERE style_code = $1 AND active = true AND category = ANY($2::text[]) ORDER BY id ASC",
+        [product.style_code, STORE_CATEGORIES]
       );
       colorVariants = siblings.map((s) => ({
         id: s.slug,
@@ -260,8 +234,8 @@ router.get("/:slug/variants", async (req, res) => {
       const { rows: curatedRows } = await query(
         `SELECT p.*, ratings.avg_rating AS rating_avg, ratings.review_count AS review_count
          FROM products p ${RATINGS_JOIN}
-         WHERE p.slug = ANY($1::text[]) AND p.active = true`,
-        [wantedSlugs]
+         WHERE p.slug = ANY($1::text[]) AND p.active = true AND p.category = ANY($2::text[])`,
+        [wantedSlugs, STORE_CATEGORIES]
       );
       curated = curatedRows;
     }
@@ -270,8 +244,8 @@ router.get("/:slug/variants", async (req, res) => {
     const { rows: relatedRows } = await query(
       `SELECT p.*, ratings.avg_rating AS rating_avg, ratings.review_count AS review_count
        FROM products p ${RATINGS_JOIN}
-       WHERE p.category = $1 AND p.slug != $2 AND p.active = true ORDER BY p.id ASC LIMIT 8`,
-      [product.category, product.slug]
+       WHERE p.category = $1 AND p.slug != $2 AND p.active = true AND p.category = ANY($3::text[]) ORDER BY p.id ASC LIMIT 8`,
+      [product.category, product.slug, STORE_CATEGORIES]
     );
 
     res.json({
@@ -298,7 +272,7 @@ const REVIEW_SORTS = {
 // GET /api/products/:slug/reviews?sort=recent&rating=5
 router.get("/:slug/reviews", async (req, res) => {
   try {
-    const { rows: productRows } = await query("SELECT id FROM products WHERE slug = $1", [req.params.slug]);
+    const { rows: productRows } = await query("SELECT id FROM products WHERE slug = $1 AND category = ANY($2::text[])", [req.params.slug, STORE_CATEGORIES]);
     if (!productRows.length) return res.status(404).json({ error: "Product not found" });
     const productId = productRows[0].id;
 
@@ -358,7 +332,7 @@ router.post("/:slug/reviews", requireCustomer, async (req, res) => {
     return res.status(400).json({ error: "Rating must be between 1 and 5" });
   }
   try {
-    const { rows: productRows } = await query("SELECT id FROM products WHERE slug = $1", [req.params.slug]);
+    const { rows: productRows } = await query("SELECT id FROM products WHERE slug = $1 AND category = ANY($2::text[])", [req.params.slug, STORE_CATEGORIES]);
     if (!productRows.length) return res.status(404).json({ error: "Product not found" });
     const productId = productRows[0].id;
 

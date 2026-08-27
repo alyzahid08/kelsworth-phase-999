@@ -26,7 +26,7 @@ class OrderError extends Error {
 }
 
 function generateOrderNumber() {
-  return "KW-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+  return "ALQ-" + crypto.randomBytes(4).toString("hex").toUpperCase();
 }
 
 async function uniqueOrderNumber(client) {
@@ -107,21 +107,12 @@ router.post("/", attachCustomerIfPresent, async (req, res) => {
         const product = rows[0];
         if (!product) throw new OrderError(`Product ${item.productId} is no longer available`);
 
-        const sizes = product.sizes || [];
-        if (!sizes.includes(item.size)) {
-          throw new OrderError(`${product.name} is not available in size ${item.size}`);
-        }
-
         const qty = Math.max(1, Math.min(10, parseInt(item.qty, 10) || 1));
-        const stockBySize = product.stock_by_size || {};
-        const sizeHasTrackedStock = Object.prototype.hasOwnProperty.call(stockBySize, item.size);
-
-        if (sizeHasTrackedStock && Number(stockBySize[item.size]) < qty) {
-          const available = Number(stockBySize[item.size]);
+        if (Number(product.stock) < qty) {
           throw new OrderError(
-            available > 0
-              ? `Only ${available} left of ${product.name} in size ${item.size}`
-              : `${product.name} in size ${item.size} is out of stock`
+            Number(product.stock) > 0
+              ? `Only ${product.stock} left of ${product.name}`
+              : `${product.name} is out of stock`
           );
         }
 
@@ -131,12 +122,9 @@ router.post("/", attachCustomerIfPresent, async (req, res) => {
         lineItems.push({
           productId: product.id,
           productName: product.name,
-          size: item.size,
+          size: "Unstitched length",
           qty,
           unitPrice,
-          sizeHasTrackedStock,
-          newStockForSize: sizeHasTrackedStock ? Number(stockBySize[item.size]) - qty : null,
-          stockBySize,
         });
       }
 
@@ -212,18 +200,10 @@ router.post("/", attachCustomerIfPresent, async (req, res) => {
           [order.id, li.productId, li.productName, li.size, li.qty, li.unitPrice]
         );
 
-        if (li.sizeHasTrackedStock) {
-          const updatedStockBySize = { ...li.stockBySize, [li.size]: Math.max(0, li.newStockForSize) };
-          await client.query(
-            "UPDATE products SET stock_by_size = $1, stock = GREATEST(stock - $2, 0) WHERE id = $3",
-            [JSON.stringify(updatedStockBySize), li.qty, li.productId]
-          );
-        } else {
-          await client.query(
-            "UPDATE products SET stock = GREATEST(stock - $1, 0) WHERE id = $2",
-            [li.qty, li.productId]
-          );
-        }
+        await client.query(
+          "UPDATE products SET stock = GREATEST(stock - $1, 0) WHERE id = $2",
+          [li.qty, li.productId]
+        );
       }
 
       return { order, lineItems };
@@ -278,7 +258,7 @@ router.post("/", attachCustomerIfPresent, async (req, res) => {
   }
 });
 
-// GET /api/orders/lookup?orderNumber=KW-XXXX&email=...
+// GET /api/orders/lookup?orderNumber=ALQ-XXXX&email=...
 router.get("/lookup", async (req, res) => {
   const { orderNumber, email } = req.query;
   if (!orderNumber || !email) {
@@ -418,20 +398,11 @@ async function checkExpiredGatewayPayments() {
         for (const item of items) {
           if (!item.product_id) continue;
           const { rows: prodRows } = await client.query(
-            "SELECT stock_by_size FROM products WHERE id = $1 FOR UPDATE",
+            "SELECT id FROM products WHERE id = $1 FOR UPDATE",
             [item.product_id]
           );
           if (!prodRows.length) continue;
-          const stockBySize = prodRows[0].stock_by_size || {};
-          if (Object.prototype.hasOwnProperty.call(stockBySize, item.size)) {
-            stockBySize[item.size] = Number(stockBySize[item.size]) + item.qty;
-            await client.query(
-              "UPDATE products SET stock_by_size = $1, stock = stock + $2 WHERE id = $3",
-              [stockBySize, item.qty, item.product_id]
-            );
-          } else {
-            await client.query("UPDATE products SET stock = stock + $1 WHERE id = $2", [item.qty, item.product_id]);
-          }
+          await client.query("UPDATE products SET stock = stock + $1 WHERE id = $2", [item.qty, item.product_id]);
         }
         await client.query(
           "UPDATE orders SET payment_status = 'failed', status = 'cancelled' WHERE id = $1",

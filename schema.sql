@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS products (
   id            SERIAL PRIMARY KEY,
   slug          TEXT UNIQUE NOT NULL,
   name          TEXT NOT NULL,
-  category      TEXT NOT NULL,       -- cotton | wash-n-wear | karandi | khaddar | linen | blended | wallets | watches | caps | bracelets
-  fit           TEXT NOT NULL,       -- 2-piece | 3-piece | regular (accessories)
+  category      TEXT NOT NULL,       -- cotton | wash-n-wear
+  fit           TEXT NOT NULL,       -- legacy compatibility field; new catalog products use unstitched
   color         TEXT NOT NULL,
   price         INTEGER NOT NULL,    -- PKR, whole rupees
   sale_price    INTEGER,             -- null when not on sale

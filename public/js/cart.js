@@ -4,7 +4,7 @@
    looked up fresh from the API so a price change on the backend is reflected
    immediately and can't be spoofed from the browser. */
 
-const CART_KEY = "vw_cart_v1";
+const CART_KEY = "alqutuz_cart_v1";
 
 function getCart() {
   try {
@@ -60,7 +60,7 @@ function cartCount() {
 /* ---------------------------- Save for later ---------------------------- */
 // A second localStorage list, same shape as the cart. Moving a line here
 // takes it out of the cart (and the order total) without losing it.
-const SAVED_KEY = "vw_saved_for_later";
+const SAVED_KEY = "alqutuz_saved_for_later";
 
 function getSavedForLater() {
   try {
@@ -121,7 +121,7 @@ async function savedForLaterWithProducts() {
 // Device-local, like the cart — no login needed to build up a history, and
 // it's what shoppers expect ("recently viewed" tracking their browser, not
 // their account). Stores product slugs only, most recent first.
-const RECENTLY_VIEWED_KEY = "vw_recently_viewed";
+const RECENTLY_VIEWED_KEY = "alqutuz_recently_viewed";
 
 function getRecentlyViewed() {
   try { return JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY)) || []; } catch (e) { return []; }
@@ -149,7 +149,7 @@ async function recentlyViewedProducts(excludeId) {
 // Stores only the code itself — the discount amount is always recomputed
 // from the server (on the cart page for preview, and again at checkout),
 // never trusted from anything saved in the browser.
-const PROMO_KEY = "vw_promo_code";
+const PROMO_KEY = "alqutuz_promo_code";
 
 function getAppliedPromoCode() {
   return localStorage.getItem(PROMO_KEY) || null;

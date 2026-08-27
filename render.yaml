@@ -10,7 +10,7 @@
 
 services:
   - type: web
-    name: kelsworth-backend
+    name: alqutuz-store
     runtime: node
     plan: free
     buildCommand: npm install

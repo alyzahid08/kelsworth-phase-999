@@ -1,7 +1,7 @@
 {
-  "name": "kelsworth-backend",
+  "name": "alqutuz-store",
   "version": "1.0.0",
-  "description": "Kelsworth — storefront + order-taking backend with admin panel",
+  "description": "AL-QUTUZ — premium unstitched Wash & Wear and Cotton storefront",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,6 +13,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.2.0",
     "nodemailer": "^6.9.14",
     "pdfkit": "^0.15.0",
     "pg": "^8.11.5"

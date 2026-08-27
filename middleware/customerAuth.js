@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const COOKIE_NAME = "vw_customer_token";
+const COOKIE_NAME = "alqutuz_customer_token";
 const TOKEN_TTL = "30d";
 
 function signCustomerToken(customer) {

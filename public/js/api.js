@@ -2,7 +2,7 @@
    Talks to the Express backend instead of using a static product array. */
 
 let _productsCache = null;
-const PRODUCTS_CACHE_KEY = "vw_products_cache_v1";
+const PRODUCTS_CACHE_KEY = "alqutuz_products_cache_v1";
 const PRODUCTS_CACHE_TTL_MS = 60 * 1000; // short — admin edits should show up quickly
 
 async function fetchProducts() {
@@ -88,10 +88,10 @@ async function submitReview(id, payload) {
 // Guests can still mark a review helpful — a small anonymous id is kept in
 // localStorage so the same visitor can't vote twice, without requiring login.
 function getAnonId() {
-  let id = localStorage.getItem("vw_anon_id");
+  let id = localStorage.getItem("alqutuz_anon_id");
   if (!id) {
     id = "anon-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    localStorage.setItem("vw_anon_id", id);
+    localStorage.setItem("alqutuz_anon_id", id);
   }
   return id;
 }
@@ -280,7 +280,7 @@ const FLASH_CACHE_TTL_MS = 30 * 1000;
 async function fetchFlashSales() {
   if (_flashSalesCache) return _flashSalesCache;
   try {
-    const cached = JSON.parse(sessionStorage.getItem("vw_flash_cache") || "null");
+    const cached = JSON.parse(sessionStorage.getItem("alqutuz_flash_cache") || "null");
     if (cached && Date.now() - cached.at < FLASH_CACHE_TTL_MS) {
       _flashSalesCache = cached.data;
       return _flashSalesCache;
@@ -290,7 +290,7 @@ async function fetchFlashSales() {
   if (!res.ok) return { flashSales: [], flashProductPrices: {} };
   _flashSalesCache = await res.json();
   try {
-    sessionStorage.setItem("vw_flash_cache", JSON.stringify({ at: Date.now(), data: _flashSalesCache }));
+    sessionStorage.setItem("alqutuz_flash_cache", JSON.stringify({ at: Date.now(), data: _flashSalesCache }));
   } catch (e) {}
   return _flashSalesCache;
 }

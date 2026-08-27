@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const COOKIE_NAME = "vw_admin_token";
+const COOKIE_NAME = "alqutuz_admin_token";
 const TOKEN_TTL = "7d";
 
 // Role hierarchy: each role inherits all permissions of roles below it.

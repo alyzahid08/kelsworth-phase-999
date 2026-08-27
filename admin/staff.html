@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/images/brand/logo-alqutuz.png" type="image/png" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Staff — AL-QUTUZ Admin</title>
@@ -21,7 +21,7 @@
     border: 1px solid var(--ink);
   }
   .role-pill.super_admin   { border-color: var(--accent); color: var(--accent); }
-  .role-pill.manager       { border-color: var(--denim); color: var(--denim); }
+  .role-pill.manager       { border-color: var(--bronze); color: var(--bronze); }
   .role-pill.order_manager { border-color: var(--ink-soft); color: var(--ink-soft); }
   .role-pill.viewer        { border-color: var(--line); color: var(--line); }
 
@@ -120,9 +120,9 @@
   </div>
 </div>
 
-<script src="js/admin.js"></script>
+<script src="js/admin.js?v=20260827"></script>
+<script src="js/bootstrap.js?v=20260827"></script>
 <script>
-  mountAdminChrome("staff");
 
   let currentStaff = [];
   let myStaffId = null;
@@ -149,7 +149,7 @@
     const isMe = s.id === myStaffId;
     return `
       <tr>
-        <td style="font-family:var(--font-mono)">${s.username}${isMe ? ' <span style="font-size:10px;color:var(--denim)">(you)</span>' : ''}</td>
+        <td style="font-family:var(--font-mono)">${s.username}${isMe ? ' <span style="font-size:10px;color:var(--bronze)">(you)</span>' : ''}</td>
         <td>${s.full_name}</td>
         <td>${rolePill(s.role)}</td>
         <td>${statusPill(s.active)}</td>
