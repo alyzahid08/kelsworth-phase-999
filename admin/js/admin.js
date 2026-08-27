@@ -42,7 +42,10 @@ function sidebarHTML(active) {
   links += `\n    <a href="/" target="_blank">View Store ↗</a>`;
 
   return `
-  <a href="dashboard.html" class="logo" style="display:block"><img src="/images/logo-wordmark-light.svg" alt="AL-QUTUZ" style="height:20px" /></a>
+  <a href="dashboard.html" class="logo admin-brand-lockup" style="display:flex">
+    <img src="/images/brand/logo-alqutuz.png" alt="AL-QUTUZ" class="admin-brand-crest" />
+    <span class="admin-brand-wordmark">AL-QUTUZ</span>
+  </a>
   <nav class="admin-nav">${links}</nav>
   <div class="spacer"></div>
   <button class="logout-btn" id="logoutBtn">Log Out</button>`;

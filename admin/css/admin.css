@@ -1,33 +1,48 @@
 /* AL-QUTUZ — admin panel styles
    Reuses the storefront's tokens/fonts from /css/style.css (loaded first),
-   adds layout for tables, forms, and the login screen. */
+   restyled to match the AL-QUTUZ ivory/black/antique-gold identity: soft
+   card surfaces, pill status badges, and a warm dark sidebar carrying the
+   real brand crest — not a generic flat SaaS dashboard. */
 
 body { background: var(--paper); }
 
 .admin-shell { display: flex; min-height: 100vh; }
 
 .admin-sidebar {
-  width: 220px;
+  width: 232px;
   flex-shrink: 0;
-  background: var(--ink);
+  background: linear-gradient(180deg, #171310 0%, #111111 100%);
   color: var(--paper);
-  padding: 24px 18px;
+  padding: 26px 20px;
   display: flex;
   flex-direction: column;
 }
-.admin-sidebar .logo { font-size: 22px; margin-bottom: 40px; display: block; }
+
+/* -------------------- brand lockup -------------------- */
+.admin-brand-lockup { align-items: center; gap: 10px; margin-bottom: 36px; text-decoration: none; }
+.admin-brand-crest { height: 36px; width: 36px; border-radius: 8px; object-fit: cover; flex: none; display: block; }
+.admin-brand-wordmark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  color: var(--paper);
+}
+
+.admin-nav { display: flex; flex-direction: column; gap: 2px; }
 .admin-nav a {
   display: block;
   font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 12px 10px;
-  border-left: 2px solid transparent;
-  color: rgba(244,240,231,0.7);
+  padding: 11px 12px;
+  border-radius: 8px;
+  color: rgba(244,240,231,0.68);
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.admin-nav a:hover { color: #fff; }
-.admin-nav a.active { color: #fff; border-left-color: var(--accent); background: rgba(244,240,231,0.06); }
+.admin-nav a:hover { color: #fff; background: rgba(244,240,231,0.06); }
+.admin-nav a.active { color: var(--ink); background: var(--accent); font-weight: 600; }
 .admin-sidebar .spacer { flex: 1; }
 .admin-sidebar .logout-btn {
   font-family: var(--font-mono);
@@ -35,34 +50,43 @@ body { background: var(--paper); }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   background: none;
-  border: 1px solid rgba(244,240,231,0.3);
+  border: 1px solid rgba(244,240,231,0.28);
+  border-radius: var(--radius-pill);
   color: rgba(244,240,231,0.8);
-  padding: 10px;
+  padding: 11px;
   width: 100%;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
-.admin-sidebar .logout-btn:hover { border-color: #fff; color: #fff; }
+.admin-sidebar .logout-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(184,148,69,0.08); }
 
-.admin-main { flex: 1; padding: 36px 44px; max-width: 1200px; }
-.admin-topbar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
-.admin-topbar h1 { font-size: 34px; }
+.admin-main { flex: 1; padding: 40px 46px; max-width: 1240px; }
+.admin-topbar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 14px; }
+.admin-topbar h1 { font-size: 32px; font-family: var(--font-display); color: var(--ink); }
 .admin-topbar p { color: var(--ink-soft); font-size: 13px; margin-top: 4px; }
 
-.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
-.stat-card { border: 1px solid var(--line); background: var(--paper-alt); padding: 18px 20px; }
+.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 32px; }
+.stat-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--paper-alt);
+  padding: 20px 22px;
+  box-shadow: 0 6px 18px rgba(17,17,17,0.05);
+}
 .stat-card .stat-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
-.stat-card .stat-value { font-family: var(--font-display); font-size: 32px; margin-top: 6px; }
+.stat-card .stat-value { font-family: var(--font-display); font-size: 32px; margin-top: 8px; color: var(--ink); }
 
-.toolbar { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
 .toolbar-left { display: flex; gap: 10px; flex-wrap: wrap; }
 .toolbar input[type="text"], .toolbar select {
   font-family: var(--font-body);
   font-size: 13px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border: 1px solid var(--line);
+  border-radius: var(--radius);
   background: var(--paper-alt);
 }
 
-table { width: 100%; border-collapse: collapse; background: var(--paper-alt); border: 1px solid var(--line); }
+table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--paper-alt); border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; box-shadow: 0 6px 18px rgba(17,17,17,0.05); }
 thead th {
   text-align: left;
   font-family: var(--font-mono);
@@ -70,11 +94,12 @@ thead th {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-soft);
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--ink);
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
   white-space: nowrap;
 }
-tbody td { padding: 13px 14px; border-bottom: 1px solid var(--line); font-size: 13.5px; vertical-align: middle; }
+tbody td { padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 13.5px; vertical-align: middle; }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover { background: var(--paper); }
 
@@ -84,25 +109,29 @@ tbody tr:hover { background: var(--paper); }
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 4px 10px;
-  border: 1px solid var(--ink);
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: rgba(17,17,17,0.06);
+  color: var(--ink);
 }
-.status-pill.pending { border-color: var(--denim-soft); color: var(--denim-soft); }
-.status-pill.processing { border-color: var(--denim); color: var(--denim); }
-.status-pill.shipped { border-color: var(--ink); color: var(--ink); }
-.status-pill.delivered { border-color: #2f6b3a; color: #2f6b3a; }
-.status-pill.cancelled { border-color: var(--accent); color: var(--accent); }
+.status-pill.pending { background: rgba(138,122,92,0.14); color: #6b5c3c; }
+.status-pill.processing { background: rgba(58,48,36,0.12); color: var(--denim); }
+.status-pill.shipped { background: rgba(17,17,17,0.08); color: var(--ink); }
+.status-pill.delivered { background: rgba(47,107,58,0.12); color: #2f6b3a; }
+.status-pill.cancelled { background: rgba(184,148,69,0.15); color: #8a6a2c; }
 
 select.status-select {
   font-family: var(--font-mono);
   font-size: 11.5px;
-  padding: 6px 8px;
+  padding: 7px 10px;
   border: 1px solid var(--line);
+  border-radius: var(--radius);
   background: var(--paper-alt);
   text-transform: uppercase;
 }
 
-.table-thumb { width: 42px; height: 50px; object-fit: cover; border: 1px solid var(--line); background: var(--paper); }
+.table-thumb { width: 42px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); background: var(--paper); }
 .row-actions { display: flex; gap: 10px; }
 .row-actions button {
   font-family: var(--font-mono);
@@ -125,33 +154,42 @@ select.status-select {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  background: radial-gradient(120% 140% at 50% 0%, #201a12 0%, #141110 55%, #111111 100%);
 }
-.login-card { width: 100%; max-width: 380px; border: 1px solid var(--ink); padding: 40px 34px; background: var(--paper-alt); }
+.login-card {
+  width: 100%; max-width: 400px;
+  border: 1px solid rgba(184,148,69,0.25);
+  border-radius: var(--radius-card);
+  padding: 44px 38px;
+  background: var(--paper-alt);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+}
 .login-card .logo { display: block; text-align: center; margin-bottom: 6px; }
-.login-card .eyebrow { display: block; text-align: center; margin-bottom: 28px; }
+.login-card img { height: 52px; width: 52px; border-radius: 12px; margin: 0 auto; display: block; }
+.login-card .eyebrow { display: block; text-align: center; margin: 14px 0 28px; }
 .login-card .field { margin-bottom: 16px; }
 .login-error { color: var(--accent); font-size: 13px; margin-bottom: 14px; display: none; }
 
 /* modal */
 .modal-overlay {
   display: none;
-  position: fixed; inset: 0; background: rgba(20,20,26,0.5); z-index: 200;
+  position: fixed; inset: 0; background: rgba(17,17,17,0.55); z-index: 200;
   align-items: center; justify-content: center; padding: 20px;
 }
 .modal-overlay.open { display: flex; }
-.modal-box { width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; background: var(--paper-alt); border: 1px solid var(--ink); padding: 30px; }
-.modal-box h3 { font-size: 24px; margin-bottom: 20px; }
-.modal-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; }
+.modal-box { width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; background: var(--paper-alt); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 32px; box-shadow: 0 24px 60px rgba(0,0,0,0.2); }
+.modal-box h3 { font-size: 24px; margin-bottom: 20px; font-family: var(--font-display); }
+.modal-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--ink-soft); }
 .modal-actions { display: flex; gap: 12px; margin-top: 22px; }
 .checkbox-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
 
-.empty-row td { text-align: center; color: var(--ink-soft); padding: 40px 14px; font-family: var(--font-mono); font-size: 12px; }
+.empty-row td { text-align: center; color: var(--ink-soft); padding: 44px 14px; font-family: var(--font-mono); font-size: 12px; }
 
 @media (max-width: 900px) {
   .admin-shell { flex-direction: column; }
   .admin-sidebar { width: 100%; flex-direction: row; align-items: center; padding: 14px 18px; }
-  .admin-sidebar .logo { margin: 0 20px 0 0; }
-  .admin-nav { display: flex; gap: 4px; }
+  .admin-brand-lockup { margin: 0 20px 0 0; }
+  .admin-nav { display: flex; flex-direction: row; gap: 4px; }
   .admin-sidebar .spacer { display: none; }
   .admin-sidebar .logout-btn { width: auto; margin-left: auto; }
   .admin-main { padding: 24px 20px; }
