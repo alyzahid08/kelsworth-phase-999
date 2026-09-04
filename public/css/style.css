@@ -759,6 +759,7 @@ summary:focus-visible {
 }
 .collection-layout > div:last-child { min-width: 0; }
 .collection-layout .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.collection-layout > .filters-overlay { display: none; }
 
 .filters { position: sticky; top: 100px; align-self: start; }
 .filter-group { padding: 18px 0; border-bottom: 1px solid var(--line); }
