@@ -204,3 +204,18 @@ select.status-select {
 .upload-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .upload-preview img { width: 72px; height: 86px; object-fit: cover; border: 1px solid var(--line); border-radius: 6px; }
 @media (max-width: 700px) { .admin-main { padding: 22px 16px 60px; } .admin-topbar { align-items: flex-start; gap: 16px; flex-direction: column; } .toolbar-left { flex-wrap: wrap; } .toolbar-left input { width: 100% !important; } .modal-box { width: calc(100vw - 24px); padding: 24px 16px; } .modal-actions { position: sticky; bottom: 0; background: var(--paper-alt); padding-top: 12px; } }
+
+.media-upload-card { max-width: 780px; background: var(--paper-alt); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 26px; box-shadow: 0 6px 18px rgba(17,17,17,.05); }
+.media-upload-card h2 { font-size: 24px; margin-bottom: 20px; }
+.form-error { color: var(--accent); font-size: 13px; margin: 12px 0; }
+.admin-video-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.admin-video-card { min-width: 0; background: var(--paper-alt); border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; }
+.admin-video-card video { display: block; width: 100%; aspect-ratio: 9 / 12; object-fit: cover; background: var(--ink); }
+.admin-video-copy { padding: 16px; }
+.admin-video-copy h3 { font-family: var(--font-body); font-size: 15px; margin: 4px 0; }
+.admin-video-copy p { min-height: 40px; color: var(--ink-soft); font-size: 13px; margin: 6px 0 14px; }
+.admin-video-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.row-delete { margin-left: auto; border: none; background: none; text-decoration: underline; font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); cursor: pointer; }
+.row-delete:hover { color: var(--accent); }
+@media (max-width: 1000px) { .admin-video-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .media-upload-card { padding: 20px 16px; } .admin-video-grid { grid-template-columns: 1fr; } }

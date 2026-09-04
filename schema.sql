@@ -267,3 +267,19 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS confirmation_token TEXT UNIQUE;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS confirmation_sent_at TIMESTAMPTZ;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS idx_orders_confirmation_status ON orders(confirmation_status);
+
+-- ---- Store video library ----
+CREATE TABLE IF NOT EXISTS store_videos (
+  id          SERIAL PRIMARY KEY,
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  category    TEXT NOT NULL DEFAULT 'product', -- product | store-update | marketing
+  video_url   TEXT NOT NULL,
+  poster_url  TEXT,
+  featured    BOOLEAN NOT NULL DEFAULT false,
+  active      BOOLEAN NOT NULL DEFAULT true,
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  uploaded_by INTEGER REFERENCES admin_users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_store_videos_active ON store_videos(active, featured, sort_order);

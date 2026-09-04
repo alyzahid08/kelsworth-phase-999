@@ -25,8 +25,8 @@
   "@type": "ClothingStore",
   "name": "AL-QUTUZ",
   "url": "https://www.alqutuz.com/",
-  "description": "AL-QUTUZ is a Karachi-based premium men's fabric house offering Wash & Wear and Cotton unstitched suit lengths, plus curated unstitched Wash & Wear and Cotton lengths, with Cash on Delivery nationwide across Pakistan.",
-  "address": { "@type": "PostalAddress", "addressLocality": "Karachi", "addressCountry": "PK" },
+  "description": "AL-QUTUZ is a Pakistan-based premium men's fabric house serving Islamabad, Faisalabad, and Rawalpindi with Wash & Wear and Cotton unstitched suit lengths.",
+  "address": { "@type": "PostalAddress", "addressLocality": "Islamabad", "addressRegion": "Islamabad, Faisalabad, Rawalpindi", "addressCountry": "PK" },
   "priceRange": "Rs. 2000 - Rs. 10000",
   "sameAs": []
 }
@@ -81,6 +81,7 @@
   <p style="max-width:56ch;margin:-8px 0 28px;color:var(--ink-soft)">Premium unstitched fabrics designed for comfort, refinement and everyday wear.</p>
   <div class="container" style="padding:0">
     <div class="product-grid" id="washNWearGrid"></div>
+    <div style="margin-top:24px"><a href="collection.html?category=wash-n-wear" class="btn outline">Explore all Wash &amp; Wear</a></div>
   </div>
 </div>
 
@@ -96,8 +97,14 @@
   <p style="max-width:56ch;margin:-8px 0 28px;color:var(--ink-soft)">Breathable fabrics with timeless character.</p>
   <div class="container" style="padding:0">
     <div class="product-grid" id="cottonGrid"></div>
+    <div style="margin-top:24px"><a href="collection.html?category=cotton" class="btn outline">Explore all Cotton</a></div>
   </div>
 </div>
+
+<section class="section-wrap" id="videoStoriesWrap" style="display:none">
+  <div class="section-head"><div><span class="eyebrow">From the AL-QUTUZ house</span><h2>Watch the latest</h2></div><hr class="stitch-rule"></div>
+  <div class="video-story-grid" id="videoStoriesGrid"></div>
+</section>
 
 <div class="section-wrap" id="bestSellersWrap" style="display:none">
   <div class="section-head">
@@ -267,6 +274,15 @@
       if (reviews.length) {
         document.getElementById("testimonialsWrap").style.display = "block";
         document.getElementById("testimonialsGrid").innerHTML = reviews.map(testimonialCardHTML).join("");
+      }
+    } catch (e) {}
+
+    try {
+      const videos = await fetchStoreVideos();
+      const featuredVideos = videos.filter((video) => video.featured).slice(0, 3);
+      if (featuredVideos.length) {
+        document.getElementById("videoStoriesWrap").style.display = "block";
+        document.getElementById("videoStoriesGrid").innerHTML = featuredVideos.map((video) => `<article class="video-story-card"><video controls preload="metadata" ${video.poster_url ? `poster="${video.poster_url}"` : ""} src="${video.video_url}"></video><div class="video-story-copy"><span class="eyebrow">${video.category.replace("-", " ")}</span><h3>${video.title}</h3>${video.description ? `<p>${video.description}</p>` : ""}</div></article>`).join("");
       }
     } catch (e) {}
   })();

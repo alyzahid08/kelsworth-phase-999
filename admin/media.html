@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" href="/images/brand/logo-alqutuz.png" type="image/png" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Media Library — AL-QUTUZ Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="adminSidebar"></aside>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div><h1>Media Library</h1><p>Upload product films, store updates, and marketing videos from your computer.</p></div>
+    </div>
+    <section class="media-upload-card">
+      <h2>Upload a video</h2>
+      <form id="videoForm">
+        <div class="form-grid">
+          <div class="field"><label for="videoTitle">Title</label><input id="videoTitle" required placeholder="New summer Wash & Wear drop" /></div>
+          <div class="field"><label for="videoCategory">Category</label><select id="videoCategory"><option value="product">Product</option><option value="store-update">Store Update</option><option value="marketing">Marketing</option></select></div>
+          <div class="field full"><label for="videoDescription">Description</label><textarea id="videoDescription" rows="2" placeholder="A short caption for the storefront video."></textarea></div>
+          <div class="field full"><label for="videoFile">Video file</label><input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-m4v" required /><p class="upload-help">MP4, WebM, MOV, or M4V. Maximum file size: 120 MB.</p></div>
+          <div class="field"><label for="posterUrl">Poster image URL (optional)</label><input id="posterUrl" placeholder="/images/uploads/video-poster.jpg" /></div>
+          <div class="field"><label for="sortOrder">Display order</label><input id="sortOrder" type="number" value="0" min="0" /></div>
+          <div class="field full checkbox-row"><input id="videoFeatured" type="checkbox" checked /><label for="videoFeatured">Feature on the homepage</label></div>
+          <div class="field full checkbox-row"><input id="videoActive" type="checkbox" checked /><label for="videoActive">Published / visible on the storefront</label></div>
+        </div>
+        <p id="videoError" class="form-error" style="display:none"></p>
+        <button class="btn" id="uploadVideoBtn" type="submit">Upload video</button>
+      </form>
+    </section>
+    <section>
+      <div class="section-head" style="margin:34px 0 18px"><div><span class="eyebrow">Published media</span><h2>Video library</h2></div><hr class="stitch-rule"></div>
+      <div class="admin-video-grid" id="videoGrid"><p class="muted-mono">Loading…</p></div>
+    </section>
+  </main>
+</div>
+<script src="js/admin.js?v=20260905"></script>
+<script src="js/bootstrap.js?v=20260905"></script>
+<script>
+const form = document.getElementById("videoForm");
+const grid = document.getElementById("videoGrid");
+function esc(value) { return String(value || "").replace(/[&<>\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function videoCard(v) {
+  return `<article class="admin-video-card"><video controls preload="metadata" ${v.poster_url ? `poster="${esc(v.poster_url)}"` : ""} src="${esc(v.video_url)}"></video><div class="admin-video-copy"><span class="eyebrow">${esc(v.category.replace("-", " "))}</span><h3>${esc(v.title)}</h3><p>${esc(v.description)}</p><div class="admin-video-meta"><span class="status-pill ${v.active ? "delivered" : "cancelled"}">${v.active ? "Published" : "Hidden"}</span>${v.featured ? '<span class="status-pill processing">Featured</span>' : ""}<button class="row-delete danger" data-delete="${v.id}">Delete</button></div></div></article>`;
+}
+async function loadVideos() { const videos = await adminFetch("/api/media/admin/videos"); grid.innerHTML = videos.length ? videos.map(videoCard).join("") : '<p class="muted-mono">No videos uploaded yet.</p>'; grid.querySelectorAll("[data-delete]").forEach((button) => button.addEventListener("click", async () => { if (!confirm("Delete this video?")) return; await adminFetch(`/api/media/admin/videos/${button.dataset.delete}`, { method: "DELETE" }); loadVideos(); })); }
+form.addEventListener("submit", async (event) => { event.preventDefault(); const error = document.getElementById("videoError"); const button = document.getElementById("uploadVideoBtn"); error.style.display = "none"; button.disabled = true; button.textContent = "Uploading…"; try { const fd = new FormData(); fd.append("video", document.getElementById("videoFile").files[0]); fd.append("title", document.getElementById("videoTitle").value); fd.append("description", document.getElementById("videoDescription").value); fd.append("category", document.getElementById("videoCategory").value); fd.append("posterUrl", document.getElementById("posterUrl").value); fd.append("sortOrder", document.getElementById("sortOrder").value); fd.append("featured", document.getElementById("videoFeatured").checked); fd.append("active", document.getElementById("videoActive").checked); const res = await fetch("/api/media/admin/videos/upload", { method: "POST", body: fd }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Upload failed"); form.reset(); document.getElementById("videoFeatured").checked = true; document.getElementById("videoActive").checked = true; await loadVideos(); } catch (err) { error.textContent = err.message; error.style.display = "block"; } finally { button.disabled = false; button.textContent = "Upload video"; } });
+loadVideos().catch((err) => { grid.innerHTML = `<p class="form-error">${esc(err.message)}</p>`; });
+</script>
+</body>
+</html>

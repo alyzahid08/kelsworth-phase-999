@@ -26,8 +26,9 @@ const SOCIAL_LINKS = {
   instagram: "https://instagram.com/alqutuz",
   facebook: "https://facebook.com/alqutuz",
   tiktok: "https://tiktok.com/@alqutuz",
-  whatsapp: "https://wa.me/923000000000",
+  whatsapp: "https://wa.me/923296009945",
 };
+const WHATSAPP_SUPPORT_NUMBERS = ["923296009945", "923480161003"];
 
 const SOCIAL_ICONS = {
   instagram: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>`,
@@ -179,7 +180,8 @@ function footerHTML() {
   <div class="footer-bottom">
     <span>© ${new Date().getFullYear()} AL-QUTUZ. All rights reserved.</span>
     <span class="payment-note">Cash on Delivery across Pakistan</span>
-    <span>Karachi, Pakistan</span>
+    <span>Islamabad · Faisalabad · Rawalpindi</span>
+    <a href="https://levelose.tech" target="_blank" rel="noopener noreferrer">Developed by levelose.tech</a>
   </div>`;
 }
 
@@ -262,6 +264,14 @@ function mountChrome(active) {
   bottomNav.id = "bottomNav";
   bottomNav.innerHTML = bottomNavHTML(active);
   document.body.appendChild(bottomNav);
+
+  const whatsappFloat = document.createElement("div");
+  whatsappFloat.className = "whatsapp-float-wrap";
+  whatsappFloat.innerHTML = `<button class="whatsapp-float" type="button" aria-label="Chat with AL-QUTUZ on WhatsApp"><span class="whatsapp-mark">◔</span><span>Chat with us</span></button><div class="whatsapp-float-menu" role="menu"><span>Choose a WhatsApp number</span>${WHATSAPP_SUPPORT_NUMBERS.map((number, i) => `<a href="https://wa.me/${number}" target="_blank" rel="noopener noreferrer" role="menuitem">WhatsApp ${i + 1}<small>+${number.slice(0, 2)} ${number.slice(2, 5)} ${number.slice(5)}</small></a>`).join("")}</div>`;
+  document.body.appendChild(whatsappFloat);
+  const whatsappButton = whatsappFloat.querySelector(".whatsapp-float");
+  whatsappButton.addEventListener("click", () => whatsappFloat.classList.toggle("open"));
+  document.addEventListener("click", (event) => { if (!whatsappFloat.contains(event.target)) whatsappFloat.classList.remove("open"); });
 
   const openBtn = document.getElementById("mobileNavToggle");
   const closeBtn = document.getElementById("mobileNavClose");

@@ -34,6 +34,9 @@ function sidebarHTML(active) {
   }
 
   links += `\n    <a href="messages.html" class="${active === 'messages' ? 'active' : ''}">Messages</a>`;
+  if (['super_admin','manager'].includes(role)) {
+    links += `\n    <a href="media.html" class="${active === 'media' ? 'active' : ''}">Media Library</a>`;
+  }
 
   if (canStaff) {
     links += `\n    <a href="staff.html" class="${active === 'staff' ? 'active' : ''}">Staff</a>`;

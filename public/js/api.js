@@ -345,3 +345,10 @@ function getInvoiceUrl(orderId, orderNumber, email) {
   }
   return `/api/orders/${orderId}/invoice?${params.toString()}`;
 }
+
+
+async function fetchStoreVideos() {
+  const res = await fetch("/api/media/videos");
+  if (!res.ok) return [];
+  return res.json();
+}

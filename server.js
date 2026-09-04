@@ -17,6 +17,7 @@ const addressesRoute = require("./routes/addresses");
 const paymentRoute = require("./routes/payment");
 const cartRoute = require("./routes/cart");
 const whatsappWebhookRoute = require("./routes/whatsappWebhook");
+const mediaRoute = require("./routes/media");
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use("/api/addresses", addressesRoute);
 app.use("/api/payment", paymentRoute);
 app.use("/api/cart", cartRoute);
 app.use("/api/webhooks/whatsapp", whatsappWebhookRoute);
+app.use("/api/media", mediaRoute);
 
 // ---- Admin panel (protected static HTML) ----
 app.get("/admin/dashboard.html", requireAdminPage, (req, res) =>
@@ -61,6 +63,9 @@ app.get("/admin/flash-sales.html", requireAdminPage, (req, res) =>
 );
 app.get("/admin/abandoned-carts.html", requireAdminPage, (req, res) =>
   res.sendFile(path.join(__dirname, "admin", "abandoned-carts.html"))
+);
+app.get("/admin/media.html", requireAdminPage, (req, res) =>
+  res.sendFile(path.join(__dirname, "admin", "media.html"))
 );
 app.get("/admin/", requireAdminPage, (req, res) =>
   res.sendFile(path.join(__dirname, "admin", "dashboard.html"))
